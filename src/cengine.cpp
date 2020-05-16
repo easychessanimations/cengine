@@ -6,7 +6,7 @@
 extern "C" {
 
     void init() {
-        std::cout << "cengine initialized " << FIGURE_ARRAY_SIZE << std::endl;
+        std::cout << "cengine initialized " << figure_symbol(LANCER_NE) << std::endl;
     }
 
     void execute_uci_command(char* command) {
