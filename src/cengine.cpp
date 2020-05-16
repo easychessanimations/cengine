@@ -2,11 +2,12 @@
 #include <string>
 
 #include "piece.hpp"
+#include "square.hpp"
 
 extern "C" {
 
     void init() {
-        std::cout << "cengine initialized " << uci_symbol_of(color_figure(WHITE, LANCER_NE)) << std::endl;
+        std::cout << "cengine initialized " << uci_of_square(SQUARE_D4) << std::endl;
     }
 
     void execute_uci_command(char* command) {
