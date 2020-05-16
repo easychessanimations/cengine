@@ -1,0 +1,8 @@
+Debug/
+
+*.wasm
+*.js
+*.html
+
+cengine.vcxproj
+cengine.vcxproj.*

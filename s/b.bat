@@ -1,0 +1,1 @@
+emcc cengine.cpp -s WASM=1 -o index.html
