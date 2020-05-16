@@ -3,7 +3,9 @@
 
 #define PIECE_HPP
 
-typedef unsigned char Figure;
+#include <cstdint>
+
+typedef uint8_t Figure;
 
 const Figure NO_FIGURE = 0;
 const Figure PAWN = 1;
@@ -29,5 +31,32 @@ const int FIGURE_ARRAY_SIZE = 18;
 const std::string FIGURE_SYMBOLS[FIGURE_ARRAY_SIZE] = { "." , "p" , "n" , "b" , "r" , "q" , "k" , "l" , "ln" , "lne" , "le" , "lse" , "ls" , "lsw" , "lw" , "lnw" , "s" , "j" };
 
 extern std::string figure_symbol(Figure fig);
+
+typedef uint8_t Color;
+
+const Color BLACK = 0;
+const Color WHITE = 1;
+
+typedef uint8_t Piece;
+
+inline Piece color_figure(Color col, Figure fig){
+	return (fig << 1) + col;
+}
+
+inline Color color_of(Piece p) {
+	return p & 1;
+}
+
+inline Color figure_of(Piece p) {
+	return p >> 1;
+}
+
+extern std::string fen_symbol_of(Piece p);
+
+extern std::string san_symbol_of(Piece p);
+
+extern std::string uci_symbol_of(Piece p);
+
+extern std::string san_letter_of(Piece p);
 
 #endif
