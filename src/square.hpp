@@ -5,13 +5,14 @@
 
 #include <cstdint>
 
-typedef uint8_t Rank;
-typedef uint8_t File;
+typedef int8_t Rank;
+typedef int8_t File;
 
-const int NUM_RANKS = 8;
-const int LAST_RANK = NUM_RANKS - 1;
-const int NUM_FILES = 8;
-const int LAST_FILE = NUM_FILES - 1;
+const uint8_t NUM_RANKS = 8;
+const Rank LAST_RANK = NUM_RANKS - 1;
+const uint8_t NUM_FILES = 8;
+const File LAST_FILE = NUM_FILES - 1;
+const uint8_t BOARD_AREA = NUM_RANKS * NUM_FILES;
 
 const std::string RANK_NAMES[NUM_RANKS] = { "1" , "2" , "3" , "4" , "5" , "6" , "7" , "8" };
 const std::string FILE_NAMES[NUM_FILES] = { "a" , "b" , "c" , "d" , "e" , "f" , "g" , "h" };
@@ -96,6 +97,10 @@ inline Rank rank_of(Square sq){
 
 inline Rank file_of(Square sq){
 	return sq & FILE_MASK;
+}
+
+inline Square rank_file(Rank rank, File file){
+	return rank * NUM_FILES + file;
 }
 
 extern std::string uci_of_square(Square sq);

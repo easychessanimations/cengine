@@ -8,7 +8,19 @@
 extern "C" {
 
     void init() {
-        std::cout << "cengine initialized\n" << pretty_bitboard(FULL_BB) << std::endl;
+        init_bitboards();
+
+        Bitboard bb = 0x0000000000000f00;
+                
+        std::cout << pretty_bitboard(bb);
+        while(bb != 0){            
+            SquareBitboard sqb = pop_square_bitboard(&bb);                        
+            std::cout << pretty_bitboard(bb);
+            std::cout << uci_of_square(sqb.sq) << std::endl;            
+            std::cout << pretty_bitboard(sqb.bb);
+        }
+
+        std::cout << "cengine initialized\n" << std::endl;
     }
 
     void execute_uci_command(char* command) {

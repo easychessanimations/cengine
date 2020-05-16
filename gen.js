@@ -88,13 +88,14 @@ let square_hpp = `
 
 #include <cstdint>
 
-typedef uint8_t Rank;
-typedef uint8_t File;
+typedef int8_t Rank;
+typedef int8_t File;
 
-const int NUM_RANKS = ${RANK_NAMES.length};
-const int LAST_RANK = NUM_RANKS - 1;
-const int NUM_FILES = ${FILE_NAMES.length};
-const int LAST_FILE = NUM_FILES - 1;
+const uint8_t NUM_RANKS = ${RANK_NAMES.length};
+const Rank LAST_RANK = NUM_RANKS - 1;
+const uint8_t NUM_FILES = ${FILE_NAMES.length};
+const File LAST_FILE = NUM_FILES - 1;
+const uint8_t BOARD_AREA = NUM_RANKS * NUM_FILES;
 
 const std::string RANK_NAMES[NUM_RANKS] = { ${RANK_NAMES.map(rn => '"' + rn + '"').join(" , ")} };
 const std::string FILE_NAMES[NUM_FILES] = { ${FILE_NAMES.map(fn => '"' + fn + '"').join(" , ")} };
@@ -118,6 +119,10 @@ inline Rank file_of(Square sq){
 	return sq & FILE_MASK;
 }
 
+inline Square rank_file(Rank rank, File file){
+	return rank * NUM_FILES + file;
+}
+
 extern std::string uci_of_square(Square sq);
 
 #endif
@@ -126,6 +131,8 @@ extern std::string uci_of_square(Square sq);
 fs.writeFileSync("src/square.hpp", square_hpp)
 
 let bitboard_hpp = `
+#include "square.hpp"
+
 #ifndef BITBOARD_HPP
 
 #define BITBOARD_HPP
@@ -134,13 +141,30 @@ let bitboard_hpp = `
 
 typedef uint64_t Bitboard;
 
-const Bitboard RANK_1_BB = 0x00000000000000ff;
-const Bitboard RANK_8_BB = 0xff00000000000000;
-const Bitboard FILE_A_BB = 0x8080808080808080;
-const Bitboard FILE_H_BB = 0x0101010101010101;
-const Bitboard FULL_BB   = 0xffffffffffffffff;
+const Bitboard BITBOARD_ONE = 0x0000000000000001;
+const Bitboard RANK_1_BB    = 0x00000000000000ff;
+const Bitboard RANK_8_BB    = 0xff00000000000000;
+const Bitboard FILE_A_BB    = 0x8080808080808080;
+const Bitboard FILE_H_BB    = 0x0101010101010101;
+const Bitboard FULL_BB      = 0xffffffffffffffff;
 
 extern std::string pretty_bitboard(Bitboard bb);
+
+struct SquareBitboard{
+	Square sq;
+	Bitboard bb;
+};
+
+extern SquareBitboard SQUARE_BITBOARDS[BOARD_AREA];
+extern void init_bitboards();
+
+extern long lsb(Bitboard bb);
+
+inline SquareBitboard pop_square_bitboard(Bitboard *bb){
+	long i = lsb(*bb);	
+	*bb &= ~(BITBOARD_ONE<<i);	
+	return SQUARE_BITBOARDS[i];
+}
 
 #endif
 `
