@@ -3,11 +3,12 @@
 
 #include "piece.hpp"
 #include "square.hpp"
+#include "bitboard.hpp"
 
 extern "C" {
 
     void init() {
-        std::cout << "cengine initialized " << uci_of_square(SQUARE_D4) << std::endl;
+        std::cout << "cengine initialized\n" << pretty_bitboard(FILE_A_BB | RANK_8_BB) << std::endl;
     }
 
     void execute_uci_command(char* command) {
