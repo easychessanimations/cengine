@@ -7,6 +7,7 @@ Debug/
 !/srcweb/index.html
 !/srcweb/index.js
 !/srcweb/preamble.js
+!/gen.js
 
 cengine.vcxproj
 cengine.vcxproj.*
