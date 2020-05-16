@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
 
+#include "piece.hpp"
+
 extern "C" {
 
     void init() {
-        std::cout << "cengine initialized" << std::endl;
+        std::cout << "cengine initialized " << FIGURE_ARRAY_SIZE << std::endl;
     }
 
     void execute_uci_command(char* command) {
