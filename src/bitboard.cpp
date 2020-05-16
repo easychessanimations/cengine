@@ -9,22 +9,22 @@
 #include <intrin.h>
 #pragma intrinsic(_BitScanForward)
 unsigned long index;
-inline long lsb(Bitboard bb) {	
+inline unsigned long lsb(Bitboard bb) {	
 	if ((bb & LOWER_HALF_BB) != 0) {
-		_BitScanForward(&index, (unsigned long)(bb & 0xffffffff));
+		_BitScanForward(&index, (unsigned long)(bb & LOWER_HALF_BB));
 		return index;
 	}
-	_BitScanForward(&index, (unsigned long)(bb>>32));
-	return index + 32;
+	_BitScanForward(&index, (unsigned long)(bb>>HALF_BB_SIZE_IN_BITS));
+	return index + HALF_BB_SIZE_IN_BITS;
 }
 
 #else
 
-inline long lsb(Bitboard bb) {	
+inline unsigned long lsb(Bitboard bb) {	
 	if ((bb & LOWER_HALF_BB) != 0) {
-		return __builtin_ctz((unsigned int)(bb & 0xffffffff));
+		return __builtin_ctz((unsigned int)(bb & LOWER_HALF_BB));
 	}
-	return __builtin_ctz((unsigned int)(bb >> 32)) + 32;
+	return __builtin_ctz((unsigned int)(bb >> HALF_BB_SIZE_IN_BITS)) + HALF_BB_SIZE_IN_BITS;
 }
 
 #endif

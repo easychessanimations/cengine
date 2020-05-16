@@ -23,8 +23,14 @@ extern "C" {
         std::cout << "cengine initialized\n" << std::endl;
     }
 
-    void execute_uci_command(char* command) {
-        std::cout << "received command " << command << std::endl;
+    void execute_uci_command(char* command_cstr) {
+        std::string command = command_cstr;
+        if (command == "x" || command == "exit" || command == "q" || command == "quit") {
+            std::cout << command << " command recognized but not supported in this mode" << std::endl;
+        }
+        else {
+            std::cout << "received command " << command << std::endl;
+        }
     }
 
 }
@@ -36,11 +42,11 @@ void uci_loop() {
     while (ok) {
         std::getline(std::cin, line);
 
-        execute_uci_command((char*)line.c_str());
-
         if (line == "x" || line == "exit" || line == "q" || line == "quit") {
             ok = false;
         }
+
+        execute_uci_command((char*)line.c_str());
     }
 }
 

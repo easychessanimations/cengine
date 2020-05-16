@@ -141,6 +141,9 @@ let bitboard_hpp = `
 
 typedef uint64_t Bitboard;
 
+const unsigned long BB_SIZE_IN_BITS = 64;
+const unsigned long HALF_BB_SIZE_IN_BITS = BB_SIZE_IN_BITS / 2;
+
 const Bitboard BITBOARD_ONE  = 0x0000000000000001;
 const Bitboard LOWER_HALF_BB = 0x00000000ffffffff;
 const Bitboard RANK_1_BB     = 0x00000000000000ff;
@@ -159,7 +162,7 @@ struct SquareBitboard{
 extern SquareBitboard SQUARE_BITBOARDS[BOARD_AREA];
 extern void init_bitboards();
 
-extern long lsb(Bitboard bb);
+extern unsigned long lsb(Bitboard bb);
 
 inline SquareBitboard pop_square_bitboard(Bitboard *bb){
 	long i = lsb(*bb);	
