@@ -10,7 +10,7 @@ extern "C" {
     void init() {
         init_bitboards();
 
-        Bitboard bb = 0x0000000000000f00;
+        Bitboard bb = 0x0f00000000000f00;
                 
         std::cout << pretty_bitboard(bb);
         while(bb != 0){            
@@ -29,9 +29,7 @@ extern "C" {
 
 }
 
-int main() {        
-    init();
-
+void uci_loop() {
     std::string line;
     bool ok = true;
 
@@ -40,10 +38,18 @@ int main() {
 
         execute_uci_command((char*)line.c_str());
 
-        if (line == "x" || line == "exit" || line == "q" || line=="quit") {
+        if (line == "x" || line == "exit" || line == "q" || line == "quit") {
             ok = false;
         }
-    }    
+    }
+}
+
+int main() {        
+    init();
+    
+#ifndef WASM
+    uci_loop();
+#endif
 
     return 0;
 }
