@@ -4,5 +4,9 @@ Debug/
 *.js
 *.html
 
+!/srcweb/index.html
+!/srcweb/index.js
+!/srcweb/preamble.js
+
 cengine.vcxproj
 cengine.vcxproj.*
