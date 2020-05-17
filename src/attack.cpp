@@ -43,3 +43,17 @@ Bitboard sliding_attack(Square sq, Delta* deltas, Bitboard occup) {
 
 	return bb;
 }
+
+Bitboard jump_attack(Square sq, Delta* deltas) {
+	Bitboard bb = EMPTY_BB;
+
+	while (deltas->d_rank | deltas->d_file) {
+		Square current_sq = sq;		
+		if (add_delta(&current_sq, *deltas)) {
+			bb |= bitboard_of(current_sq);			
+		}
+		deltas++;
+	}
+
+	return bb;
+}

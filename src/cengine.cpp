@@ -12,7 +12,7 @@ extern "C" {
     void init() {
         init_bitboards();
 
-        Bitboard bb = sliding_attack(SQUARE_A1, (Delta*)BISHOP_DELTAS, bitboard_of(SQUARE_D4));        
+        Bitboard bb = jump_attack(SQUARE_B2, (Delta*)KNIGHT_DELTAS);        
         std::cout << pretty_bitboard(bb);
 
         std::cout << (int)variation_count(bb) << std::endl;
