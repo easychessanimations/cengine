@@ -48,6 +48,7 @@ extern Magic find_magic_for_shift(Square sq, Delta* deltas, int shift, int max_t
 struct MagicAndShift {
 	Magic magic;
 	int shift;
+	Bitboard* lookup;
 };
 
 extern MagicAndShift find_magic_and_shift(Square sq, Delta* deltas, int max_shift, int min_shift, int max_tries);

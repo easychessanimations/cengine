@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "attack.hpp"
 #include "square.hpp"
@@ -178,7 +179,26 @@ bool find_magics(std::string label, Delta* deltas, MagicAndShift *store) {
 MagicAndShift BISHOP_MAGICS[BOARD_AREA];
 MagicAndShift ROOK_MAGICS[BOARD_AREA];
 
+void build_magics(MagicAndShift *magics, Delta *deltas) {
+	for (Square sq = 0; sq < BOARD_AREA; sq++) {		
+		Bitboard magic_mobility = magic_attack(sq, deltas, EMPTY_BB);		
+
+		PartialMask mask = 0;
+		MagicAndShift ms = magics[sq];
+		int space = (1 << ms.shift);		
+		magics[sq].lookup = (Bitboard*)malloc(space * sizeof(Bitboard));
+		while (mask < variation_count(magic_mobility)) {
+			Bitboard partial_occup = mask_to_partial_occup(mask, magic_mobility);
+			Bitboard partial_mobility = sliding_attack(sq, deltas, partial_occup);
+			int key = magic_key(ms.magic, ms.shift, partial_occup);			
+			magics[sq].lookup[key] = partial_mobility;
+			mask++;
+		}
+	}
+}
+
 bool init_attacks() {
+	std::cout << "info string initializing attacks" << std::endl;
 	total_space = 0;
 	if (!find_magics("bishop", (Delta*)BISHOP_DELTAS, BISHOP_MAGICS)) {
 		std::cout << "init attacks failed" << std::endl;
@@ -188,6 +208,10 @@ bool init_attacks() {
 		std::cout << "init attacks failed" << std::endl;
 		return false;
 	}
-	std::cout << "\ninit attacks done total space " << total_space << std::endl;
+	std::cout << "info string init attacks done total space " << total_space << std::endl;
+	std::cout << "info string initializing magics" << std::endl;
+	build_magics(BISHOP_MAGICS, (Delta*)BISHOP_DELTAS);
+	build_magics(ROOK_MAGICS, (Delta*)ROOK_DELTAS);
+	std::cout << "info string initializing magics done" << std::endl;
 	return true;
 }

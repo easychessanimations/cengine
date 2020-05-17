@@ -26,7 +26,7 @@ extern "C" {
             mask++;
         }*/
 
-        std::cout << "cengine initialized\n" << std::endl;
+        std::cout << "info string engine initialized\n" << std::endl;
     }
 
     void execute_uci_command(char* command_cstr) {
