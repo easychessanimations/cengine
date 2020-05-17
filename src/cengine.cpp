@@ -11,8 +11,9 @@ extern "C" {
 
     void init() {
         init_bitboards();
+        init_attacks();
 
-        Bitboard bb = jump_attack(SQUARE_B2, (Delta*)KNIGHT_DELTAS);        
+        /*Bitboard bb = jump_attack(SQUARE_B2, (Delta*)KNIGHT_DELTAS);        
         std::cout << pretty_bitboard(bb);
 
         std::cout << (int)variation_count(bb) << std::endl;
@@ -23,7 +24,7 @@ extern "C" {
             Bitboard partial_occup = mask_to_partial_occup(mask, bb);            
             std::cout << pretty_bitboard(partial_occup);           
             mask++;
-        }
+        }*/
 
         std::cout << "cengine initialized\n" << std::endl;
     }
