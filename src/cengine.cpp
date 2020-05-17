@@ -25,10 +25,10 @@ extern "C" {
 
     void execute_uci_command(char* command_cstr) {
         std::string command = command_cstr;
+
         if (command == "x" || command == "exit" || command == "q" || command == "quit") {
             std::cout << command << " command recognized but not supported in this mode" << std::endl;
-        }
-        else {
+        } else {
             std::cout << "received command " << command << std::endl;
         }
     }
