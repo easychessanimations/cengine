@@ -6,6 +6,7 @@
 #include "attack.hpp"
 #include "square.hpp"
 #include "bitboard.hpp"
+#include "piece.hpp"
 
 Bitboard mask_to_partial_occup(PartialMask mask, Bitboard full_occup) {
 	Bitboard bb = EMPTY_BB;
@@ -197,6 +198,41 @@ void build_magics(MagicAndShift *magics, Delta *deltas) {
 	}
 }
 
+PawnInfo PAWN_INFOS[2][BOARD_AREA];
+
+inline Rank pawn_start_rank(Color col) {
+	return col ? 1 : 6;
+}
+
+void init_pawn_infos() {
+	for (Color col = BLACK;col <= WHITE;col++) {
+		for (Square sq = 0;sq < BOARD_AREA;sq++) {
+			PawnInfo pi = PawnInfo{};
+			pi.num_pushes = 0;
+			pi.num_captures = 0;
+			Square curr_sq = sq;
+			Rank rank_dir = col == WHITE ? 1 : -1;
+			if (add_delta(&curr_sq, Delta{ rank_dir,0 })) {
+				Square push_one_sq = curr_sq;
+				pi.pushes[pi.num_pushes++] = move_ft(sq, push_one_sq);
+				for (File capt = -1;capt <= 1;capt += 2) {
+					Square capt_sq = push_one_sq;
+					if (add_delta(&capt_sq, Delta{ capt,0 })) {
+						pi.captures[pi.num_captures++] = move_ft(sq, capt_sq);
+					}
+				}
+				Rank rank = rank_of(sq);
+				if (rank == pawn_start_rank(col)) {
+					if (add_delta(&curr_sq, Delta{ rank_dir,0 })) {
+						Square push_two_sq = curr_sq;
+						pi.pushes[pi.num_pushes++] = move_ft(sq, push_two_sq);
+					}
+				}
+			}
+		}
+	}	
+}
+
 bool init_attacks() {
 	std::cout << "info string initializing attacks" << std::endl;
 	total_space = 0;
@@ -213,6 +249,9 @@ bool init_attacks() {
 	build_magics(BISHOP_MAGICS, (Delta*)BISHOP_DELTAS);
 	build_magics(ROOK_MAGICS, (Delta*)ROOK_DELTAS);
 	std::cout << "info string initializing magics done" << std::endl;
+	std::cout << "info string initializing pawn infos" << std::endl;
+	init_pawn_infos();
+	std::cout << "info string initializing pawn infos done" << std::endl;
 	return true;
 }
 

@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "bitboard.hpp"
+#include "square.hpp"
 
 extern Bitboard mask_to_partial_occup(PartialMask mask, Bitboard full_occup);
 
@@ -61,4 +62,32 @@ extern bool find_magics(std::string label, Delta* deltas, MagicAndShift *store);
 extern bool init_attacks();
 
 extern Bitboard sliding_mobility(Square sq, Delta* deltas, MagicAndShift* magics, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet, bool jump_over_own_piece);
+
+typedef uint32_t Move;
+
+const uint8_t SQUARE_STORAGE_SIZE_IN_BITS = 6;
+const Move SQUARE_MASK = (1 << SQUARE_STORAGE_SIZE_IN_BITS) - 1;
+const uint8_t TO_SQUARE_SHIFT = SQUARE_STORAGE_SIZE_IN_BITS;
+
+inline Move move_ft(Square from_sq, Square to_sq) {
+	return Move(from_sq) + ( Move(to_sq) << TO_SQUARE_SHIFT );
+}
+
+inline Square from_sq_of(Move move) {
+	return move & SQUARE_MASK;
+}
+
+inline Square to_sq_of(Move move) {
+	return (move >> TO_SQUARE_SHIFT) & SQUARE_MASK;
+}
+
+struct PawnInfo {
+	Move pushes[2];
+	int num_pushes;
+	Move captures[2];
+	int num_captures;
+};
+
+extern PawnInfo PAWN_INFOS[2][BOARD_AREA];
+
 #endif

@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <stdio.h>
 
 #include "state.hpp"
 
@@ -27,16 +28,33 @@ Piece fen_symbol_to_piece(std::string fen_symbol) {
 	return NO_PIECE;
 }
 
-void put_piece_at_square(State* st, Piece p, Square sq) {
-	st->rep[sq] = p;
-}
-
 Piece piece_at_square(State st, Square sq) {
 	return st.rep[sq];
 }
 
+void remove_piece_from_square(State *st, Square sq) {
+	Piece p = piece_at_square(*st, sq);
+	if (p == NO_PIECE) {
+		return;
+	}
+	Bitboard bb = bitboard_of(sq);
+	st->by_color[color_of(p)] &= (~bb);
+	st->by_figure[figure_of(p)] &= (~bb);
+	st->rep[sq] = NO_PIECE;
+}
+
+void put_piece_at_square(State* st, Piece p, Square sq) {
+	remove_piece_from_square(st, sq);
+	Bitboard bb = bitboard_of(sq);
+	st->by_color[color_of(p)] |= bb;
+	st->by_figure[figure_of(p)] |= bb;
+	st->rep[sq] = p;
+}
+
 State state_from_fen(std::string fen) {
 	State st = State{};
+
+	memset(&st, 0, sizeof(State));
 
 	if (fen == "") {
 		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
