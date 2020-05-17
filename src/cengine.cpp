@@ -14,6 +14,8 @@ extern "C" {
         Bitboard bb = 0x1000000000000001;        
         std::cout << pretty_bitboard(bb);
 
+        std::cout << (int)pop_cnt(bb) << std::endl;
+
         while(bb != 0){            
             Square sq = pop_square(&bb);
             std::cout << pretty_bitboard(bb);

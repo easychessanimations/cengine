@@ -87,6 +87,7 @@ let square_hpp = `
 #define SQUARE_HPP
 
 #include <cstdint>
+#include <string>
 
 typedef int8_t Rank;
 typedef int8_t File;
@@ -170,29 +171,39 @@ inline Bitboard pop_bitboard(Bitboard *bb){
 
 #include <intrin.h>
 #pragma intrinsic(_BitScanForward)
+
 inline Square square_of(Bitboard bb) {	
 	unsigned long index;
 	if ((bb & LOWER_HALF_BB) != 0) {
 		_BitScanForward(&index, (unsigned long)(bb & LOWER_HALF_BB));
 		return (Square)index;
 	}
-	_BitScanForward(&index, (unsigned long)(bb>>HALF_BB_SIZE_IN_BITS));
+	_BitScanForward(&index, (unsigned long)(bb >> HALF_BB_SIZE_IN_BITS));
 	return Square(index + HALF_BB_SIZE_IN_BITS);
+}
+
+inline uint8_t pop_cnt(Bitboard bb){
+	return __popcnt(bb & LOWER_HALF_BB) + __popcnt(bb >> HALF_BB_SIZE_IN_BITS);	
 }
 
 #else
 
 inline Square square_of(Bitboard bb) {	
-	if ((bb & LOWER_HALF_BB) != 0) {
-		return Square(__builtin_ctz((unsigned int)(bb & LOWER_HALF_BB)));
-	}
-	return Square(__builtin_ctz((unsigned int)(bb >> HALF_BB_SIZE_IN_BITS)) + HALF_BB_SIZE_IN_BITS);
+	return Square(__builtin_ctzll(bb));
+}
+
+inline uint8_t pop_cnt(Bitboard bb){
+	return __builtin_popcountll(bb);
 }
 
 #endif
 
 inline Square pop_square(Bitboard *bb){
 	return square_of(pop_bitboard(bb));
+}
+
+inline Bitboard bitboard_of(Square sq){
+	return BITBOARD_ONE << sq;
 }
 
 #endif

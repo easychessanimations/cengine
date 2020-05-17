@@ -4,6 +4,7 @@
 #define SQUARE_HPP
 
 #include <cstdint>
+#include <string>
 
 typedef int8_t Rank;
 typedef int8_t File;
