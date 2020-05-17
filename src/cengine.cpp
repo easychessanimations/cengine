@@ -5,21 +5,25 @@
 #include "piece.hpp"
 #include "square.hpp"
 #include "bitboard.hpp"
+#include "attack.hpp"
 
 extern "C" {
 
     void init() {
         init_bitboards();
 
-        Bitboard bb = 0x1000000000000001;        
+        Bitboard bb = 0x3000000000000001;        
         std::cout << pretty_bitboard(bb);
 
         std::cout << (int)pop_cnt(bb) << std::endl;
 
-        while(bb != 0){            
-            Square sq = pop_square(&bb);
-            std::cout << pretty_bitboard(bb);
-            std::cout << uci_of_square(sq) << std::endl;                        
+        PartialMask mask = 0;
+
+        while(mask < variation_count(bb)){            
+            Bitboard partial_occup = mask_to_partial_occup(mask, bb);
+            std::cout << pretty_bitboard((Bitboard)mask);
+            std::cout << pretty_bitboard(partial_occup);           
+            mask++;
         }
 
         std::cout << "cengine initialized\n" << std::endl;

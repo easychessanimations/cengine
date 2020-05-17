@@ -73,4 +73,10 @@ inline Bitboard bitboard_of(Square sq){
 	return BITBOARD_ONE << sq;
 }
 
+typedef uint16_t PartialMask;
+
+inline PartialMask variation_count(Bitboard bb){
+	return 1 << pop_cnt(bb);
+}
+
 #endif
