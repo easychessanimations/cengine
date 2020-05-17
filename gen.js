@@ -34,6 +34,8 @@ ${FIGURE_INFO.map((fi,i)=>`const Figure ${fi[1].toUpperCase()} = ${i};`).join("\
 
 const int FIGURE_ARRAY_SIZE = ${FIGURE_INFO.length};
 
+const int PIECE_ARRAY_SIZE = 2 * FIGURE_ARRAY_SIZE;
+
 const std::string FIGURE_SYMBOLS[FIGURE_ARRAY_SIZE] = { ${FIGURE_INFO.map(fi => '"' + fi[0] + '"').join(" , ")} };
 
 extern std::string figure_symbol(Figure fig);
@@ -44,6 +46,8 @@ const Color BLACK = 0;
 const Color WHITE = 1;
 
 typedef uint8_t Piece;
+
+const Piece NO_PIECE = 0;
 
 inline Piece color_figure(Color col, Figure fig){
 	return (fig << 1) + col;

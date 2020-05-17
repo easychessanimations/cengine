@@ -28,6 +28,8 @@ const Figure JAILER = 17;
 
 const int FIGURE_ARRAY_SIZE = 18;
 
+const int PIECE_ARRAY_SIZE = 2 * FIGURE_ARRAY_SIZE;
+
 const std::string FIGURE_SYMBOLS[FIGURE_ARRAY_SIZE] = { "." , "p" , "n" , "b" , "r" , "q" , "k" , "l" , "ln" , "lne" , "le" , "lse" , "ls" , "lsw" , "lw" , "lnw" , "s" , "j" };
 
 extern std::string figure_symbol(Figure fig);
@@ -38,6 +40,8 @@ const Color BLACK = 0;
 const Color WHITE = 1;
 
 typedef uint8_t Piece;
+
+const Piece NO_PIECE = 0;
 
 inline Piece color_figure(Color col, Figure fig){
 	return (fig << 1) + col;

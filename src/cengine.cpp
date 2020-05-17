@@ -6,6 +6,7 @@
 #include "square.hpp"
 #include "bitboard.hpp"
 #include "attack.hpp"
+#include "state.hpp"
 
 extern "C" {
 
@@ -13,8 +14,12 @@ extern "C" {
         init_bitboards();
         init_attacks();
 
-        Bitboard bb = sliding_mobility(SQUARE_E4, (Delta*)ROOK_DELTAS, ROOK_MAGICS, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true, false);
-        std::cout << pretty_bitboard(bb);
+        State st = state_from_fen("");
+
+        std::cout << pretty_state(st) << std::endl;
+
+        /*Bitboard bb = sliding_mobility(SQUARE_E4, (Delta*)ROOK_DELTAS, ROOK_MAGICS, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true, false);
+        std::cout << pretty_bitboard(bb);*/
 
         /*std::cout << (int)variation_count(bb) << std::endl;
 
