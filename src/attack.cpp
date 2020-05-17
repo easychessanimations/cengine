@@ -8,6 +8,14 @@
 #include "bitboard.hpp"
 #include "piece.hpp"
 
+Bitboard BISHOP_ATTACK[BOARD_AREA];
+Bitboard BISHOP_MAGIC_ATTACK[BOARD_AREA];
+Bitboard ROOK_ATTACK[BOARD_AREA];
+Bitboard ROOK_MAGIC_ATTACK[BOARD_AREA];
+Bitboard QUEEN_ATTACK[BOARD_AREA];
+Bitboard KNIGHT_ATTACK[BOARD_AREA];
+Bitboard KING_ATTACK[BOARD_AREA];
+
 Bitboard mask_to_partial_occup(PartialMask mask, Bitboard full_occup) {
 	Bitboard bb = EMPTY_BB;
 
@@ -90,14 +98,10 @@ Bitboard magic_mobility(Square sq, Bitboard mobility) {
 	return mobility & mask;
 }
 
-Bitboard magic_attack(Square sq, Delta* deltas, Bitboard occup) {
-	return magic_mobility(sq, sliding_attack(sq, deltas, occup));
-}
-
 CheckMagicAndShift check_magic_and_shift_cache[1 << MAX_MAGIC_SHIFT];
 
 bool check_magic_and_shift(Square sq, Delta *deltas, Magic magic, int shift) {
-	Bitboard mobility = magic_attack(sq, deltas, EMPTY_BB);
+	Bitboard mobility = magic_mobility(sq, sliding_attack(sq, deltas, EMPTY_BB));
 
 	for (int i = 0; i < (1 << shift); i++) {
 		check_magic_and_shift_cache[i] = CheckMagicAndShift{ false, EMPTY_BB };
@@ -105,7 +109,7 @@ bool check_magic_and_shift(Square sq, Delta *deltas, Magic magic, int shift) {
 	PartialMask mask = 0;
 	while (mask < variation_count(mobility)) {
 		Bitboard partial_occup = mask_to_partial_occup(mask, mobility);
-		Bitboard partial_mobility = magic_attack(sq, deltas, partial_occup);
+		Bitboard partial_mobility = magic_mobility(sq, sliding_attack(sq, deltas, partial_occup));
 		int key = magic_key(magic, shift, partial_occup);
 		CheckMagicAndShift item = check_magic_and_shift_cache[key];
 		if (item.used) {
@@ -152,13 +156,13 @@ MagicAndShift find_magic_and_shift(Square sq, Delta* deltas, int max_shift, int 
 
 int total_space;
 
-bool VERBOSE = false;
+bool VERBOSE = true;
 
 bool find_magics(std::string label, Delta* deltas, MagicAndShift *store) {
 	if(VERBOSE) std::cout << "finding magics for " << label << std::endl;	
 	for (Square sq = 0; sq < BOARD_AREA; sq++) {
 		if (VERBOSE) std::cout << "\nfinding magics for square " << uci_of_square(sq) << std::endl;
-		Bitboard ma = magic_attack(sq, deltas, EMPTY_BB);
+		Bitboard ma = magic_mobility(sq, sliding_attack(sq, deltas, EMPTY_BB));
 		if (VERBOSE) std::cout << pretty_bitboard(ma) << std::endl;
 		int min_shift = pop_cnt(ma);
 		MagicAndShift ms = find_magic_and_shift(sq, deltas, MAX_MAGIC_SHIFT, min_shift + 4, 5);
@@ -182,14 +186,14 @@ MagicAndShift ROOK_MAGICS[BOARD_AREA];
 
 void build_magics(MagicAndShift *magics, Delta *deltas) {
 	for (Square sq = 0; sq < BOARD_AREA; sq++) {		
-		Bitboard magic_mobility = magic_attack(sq, deltas, EMPTY_BB);		
+		Bitboard mag_mob = magic_mobility(sq, sliding_attack(sq, deltas, EMPTY_BB));		
 
 		PartialMask mask = 0;
 		MagicAndShift ms = magics[sq];
 		int space = (1 << ms.shift);		
 		magics[sq].lookup = (Bitboard*)malloc(space * sizeof(Bitboard));
-		while (mask < variation_count(magic_mobility)) {
-			Bitboard partial_occup = mask_to_partial_occup(mask, magic_mobility);
+		while (mask < variation_count(mag_mob)) {
+			Bitboard partial_occup = mask_to_partial_occup(mask, mag_mob);
 			Bitboard partial_mobility = sliding_attack(sq, deltas, partial_occup);
 			int key = magic_key(ms.magic, ms.shift, partial_occup);			
 			magics[sq].lookup[key] = partial_mobility;
@@ -235,6 +239,15 @@ void init_pawn_infos() {
 
 bool init_attacks() {
 	std::cout << "info string initializing attacks" << std::endl;
+	for (Square sq = 0;sq < BOARD_AREA;sq++) {
+		BISHOP_ATTACK[sq] = sliding_attack(sq, (Delta*)BISHOP_DELTAS, EMPTY_BB);
+		BISHOP_MAGIC_ATTACK[sq] = magic_mobility(sq, BISHOP_ATTACK[sq]);
+		ROOK_ATTACK[sq] = sliding_attack(sq, (Delta*)ROOK_DELTAS, EMPTY_BB);
+		ROOK_MAGIC_ATTACK[sq] = magic_mobility(sq, ROOK_ATTACK[sq]);
+		QUEEN_ATTACK[sq] = sliding_attack(sq, (Delta*)QUEEN_DELTAS, EMPTY_BB);
+		KNIGHT_ATTACK[sq] = jump_attack(sq, (Delta*)KNIGHT_DELTAS);
+		KING_ATTACK[sq] = jump_attack(sq, (Delta*)QUEEN_DELTAS);
+	}
 	total_space = 0;
 	if (!find_magics("bishop", (Delta*)BISHOP_DELTAS, BISHOP_MAGICS)) {
 		std::cout << "init attacks failed" << std::endl;
@@ -255,13 +268,36 @@ bool init_attacks() {
 	return true;
 }
 
-Bitboard sliding_mobility(Square sq, Delta* deltas, MagicAndShift *magics, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet, bool jump_over_own_piece) {	
+Bitboard sliding_mobility(Square sq, Bitboard magic_attack, MagicAndShift *magics, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet, bool jump_over_own_piece) {	
 	MagicAndShift ms = magics[sq];
 	Bitboard occup = jump_over_own_piece ? occup_them : (occup_us | occup_them);
-	int key = magic_key(ms.magic, ms.shift, occup & magic_attack(sq, deltas, EMPTY_BB));	
+	int key = magic_key(ms.magic, ms.shift, occup & magic_attack);	
 	Bitboard mobility = ms.lookup[key];	
 	Bitboard final_mobility = EMPTY_BB;
 	if (violent) final_mobility |= (mobility & occup_them);
 	if (quiet) final_mobility |= (mobility & (~occup_them));		
 	return final_mobility & (~occup_us);
+}
+
+Bitboard jump_mobility(Square sq, Bitboard attack, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet) {				
+	Bitboard final_mobility = EMPTY_BB;
+	if (violent) final_mobility |= (attack & occup_them);
+	if (quiet) final_mobility |= (attack & (~occup_them));
+	return final_mobility & (~occup_us);
+}
+
+Bitboard bishop_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet) {
+	return sliding_mobility(sq, BISHOP_MAGIC_ATTACK[sq], BISHOP_MAGICS, occup_us, occup_them, violent, quiet, false);
+}
+Bitboard rook_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet) {
+	return sliding_mobility(sq, ROOK_MAGIC_ATTACK[sq], ROOK_MAGICS, occup_us, occup_them, violent, quiet, false);
+}
+extern Bitboard queen_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet) {
+	return bishop_mobility(sq, occup_us, occup_them, violent, quiet) | rook_mobility(sq, occup_us, occup_them, violent, quiet);
+}
+extern Bitboard knight_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet) {
+	return jump_mobility(sq, KNIGHT_ATTACK[sq], occup_us, occup_them, violent, quiet);
+}
+extern Bitboard king_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet) {
+	return jump_mobility(sq, KING_ATTACK[sq], occup_us, occup_them, violent, quiet);
 }

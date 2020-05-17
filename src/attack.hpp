@@ -15,7 +15,7 @@ struct Delta {
 };
 
 const Delta ROOK_DELTAS[5] = { Delta{1,0} , Delta{-1,0}, Delta{0,1}, Delta{0,-1} , Delta{0,0} };
-const Delta BISHOP_DELTAS[5] = { Delta{1,1} , Delta{-1,1}, Delta{-1,1}, Delta{-1,-1} , Delta{0,0} };
+const Delta BISHOP_DELTAS[5] = { Delta{1,1} , Delta{-1,1}, Delta{1,-1}, Delta{-1,-1} , Delta{0,0} };
 const Delta QUEEN_DELTAS[9] = { Delta{1,0} , Delta{1,1} , Delta{0,1} , Delta{-1,1} , Delta{-1,0} , Delta{-1,-1} , Delta{0,-1} , Delta{1,-1} , Delta{0,0} };
 const Delta KNIGHT_DELTAS[9] = { Delta{2,1} , Delta{2,-1} , Delta{-2,1} , Delta{-2,-1} , Delta{1,2} , Delta{1,-2} , Delta{-1,2} , Delta{-1,-2} , Delta{0,0} };
 
@@ -38,8 +38,6 @@ struct CheckMagicAndShift {
 
 extern Bitboard magic_mobility(Square sq, Bitboard mobility);
 
-extern Bitboard magic_attack(Square sq, Delta* deltas, Bitboard occup);
-
 extern bool check_magic_and_shift(Square sq, Delta *deltas, Magic magic, int shift);
 
 extern Magic gen_magic();
@@ -60,8 +58,6 @@ extern MagicAndShift ROOK_MAGICS[BOARD_AREA];
 extern bool find_magics(std::string label, Delta* deltas, MagicAndShift *store);
 
 extern bool init_attacks();
-
-extern Bitboard sliding_mobility(Square sq, Delta* deltas, MagicAndShift* magics, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet, bool jump_over_own_piece);
 
 typedef uint32_t Move;
 
@@ -89,5 +85,19 @@ struct PawnInfo {
 };
 
 extern PawnInfo PAWN_INFOS[2][BOARD_AREA];
+
+extern Bitboard BISHOP_ATTACK[BOARD_AREA];
+extern Bitboard BISHOP_MAGIC_ATTACK[BOARD_AREA];
+extern Bitboard ROOK_ATTACK[BOARD_AREA];
+extern Bitboard ROOK_MAGIC_ATTACK[BOARD_AREA];
+extern Bitboard QUEEN_ATTACK[BOARD_AREA];
+extern Bitboard KNIGHT_ATTACK[BOARD_AREA];
+extern Bitboard KING_ATTACK[BOARD_AREA];
+
+extern Bitboard bishop_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
+extern Bitboard rook_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
+extern Bitboard queen_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
+extern Bitboard knight_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
+extern Bitboard king_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
 
 #endif
