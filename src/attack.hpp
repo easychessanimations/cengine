@@ -7,6 +7,21 @@
 #include "bitboard.hpp"
 #include "square.hpp"
 
+typedef uint32_t Move;
+
+const uint8_t SQUARE_STORAGE_SIZE_IN_BITS = 6;
+const Move SQUARE_MASK = (1 << SQUARE_STORAGE_SIZE_IN_BITS) - 1;
+const uint8_t TO_SQUARE_SHIFT = SQUARE_STORAGE_SIZE_IN_BITS;
+
+inline Square from_sq_of(Move move) {
+	return move & SQUARE_MASK;
+}
+
+inline Square to_sq_of(Move move) {
+	return (move >> TO_SQUARE_SHIFT) & SQUARE_MASK;
+}
+
+
 extern Bitboard mask_to_partial_occup(PartialMask mask, Bitboard full_occup);
 
 struct Delta {
@@ -59,22 +74,12 @@ extern bool find_magics(std::string label, Delta* deltas, MagicAndShift *store);
 
 extern bool init_attacks();
 
-typedef uint32_t Move;
-
-const uint8_t SQUARE_STORAGE_SIZE_IN_BITS = 6;
-const Move SQUARE_MASK = (1 << SQUARE_STORAGE_SIZE_IN_BITS) - 1;
-const uint8_t TO_SQUARE_SHIFT = SQUARE_STORAGE_SIZE_IN_BITS;
-
 inline Move move_ft(Square from_sq, Square to_sq) {
 	return Move(from_sq) + ( Move(to_sq) << TO_SQUARE_SHIFT );
 }
 
-inline Square from_sq_of(Move move) {
-	return move & SQUARE_MASK;
-}
-
-inline Square to_sq_of(Move move) {
-	return (move >> TO_SQUARE_SHIFT) & SQUARE_MASK;
+inline std::string uci_of_move(Move move) {
+	return uci_of_square(from_sq_of(move)) + uci_of_square(to_sq_of(move));
 }
 
 struct PawnInfo {

@@ -16,10 +16,12 @@ extern "C" {
 
         State st = state_from_fen("");
 
+        //std::cout << pretty_bitboard(st.by_color[WHITE]);
+
         std::cout << pretty_state(st) << std::endl;
 
-        Bitboard bb = queen_mobility(SQUARE_E4, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true);
-        std::cout << pretty_bitboard(bb);
+        /*Bitboard bb = queen_mobility(SQUARE_E4, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true);
+        std::cout << pretty_bitboard(bb);*/
 
         /*std::cout << (int)variation_count(bb) << std::endl;
 

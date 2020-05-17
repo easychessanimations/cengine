@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "state.hpp"
+#include "attack.hpp"
 
 int split(std::string str, std::string delim, std::string *buff) {
 	int index = int(str.find(delim));
@@ -119,6 +120,92 @@ std::string pretty_state(State st) {
 	else {
 		buff += "b";
 	}
+	buff += "\n";
+
+	Move move_buff[500];
+
+	Move* last_move = generate_pseudo_legal(st, move_buff);
+
+	Move* ptr = move_buff;
+
+	buff += "moves : ";
+
+	while (ptr < last_move) {
+		buff += uci_of_move(*ptr++) + " ";
+	}
+	buff += "\n";
+
 	return buff + "\n";
 }
 
+Bitboard mobility_for_piece_at_square(State st, Piece p, Square sq, bool violent, bool quiet) {
+	Color col = color_of(p);
+	Figure fig = figure_of(p);
+	Bitboard occup_us = st.by_color[col];
+	Bitboard occup_them = st.by_color[1-col];
+	switch (fig) {
+	case BISHOP:
+		return bishop_mobility(sq, occup_us, occup_them, violent, quiet);
+	case ROOK:
+		return rook_mobility(sq, occup_us, occup_them, violent, quiet);
+	case QUEEN:
+		return queen_mobility(sq, occup_us, occup_them, violent, quiet);
+	case KNIGHT:
+		return knight_mobility(sq, occup_us, occup_them, violent, quiet);
+	case KING:
+		return king_mobility(sq, occup_us, occup_them, violent, quiet);
+	default:
+		return EMPTY_BB;
+	}	
+}
+
+Move* pseudo_legal_moves_for_piece_at_square(State st, Piece p, Square sq, Move* move_buff, bool violent, bool quiet) {
+	//std::cout << uci_of_square(sq) << " " << fen_symbol_of(p) << " " << std::endl;
+	Figure fig = figure_of(p);
+	Color col = color_of(p);
+	if (fig == PAWN) {
+		PawnInfo pi = PAWN_INFOS[col][sq];		
+		if(quiet && (pi.num_pushes > 0) && (piece_at_square(st, to_sq_of(pi.pushes[0])) == NO_PIECE)) {
+			*(move_buff++) = pi.pushes[0];
+			if (pi.num_pushes > 1) {
+				if (piece_at_square(st, to_sq_of(pi.pushes[1])) == NO_PIECE) {
+					*(move_buff++) = pi.pushes[1];
+				}
+			}
+		}
+		if (violent) {
+			for (int i = 0;i < pi.num_captures;i++) {
+				Piece cp = piece_at_square(st, to_sq_of(pi.captures[i]));
+				if( (cp != NO_PIECE) && (color_of(cp) == (1-col)) ) {
+					*(move_buff++) = pi.captures[i];
+				}
+			}
+		}
+	} else {
+		Bitboard mobility = mobility_for_piece_at_square(st, p, sq, violent, quiet);
+		while (mobility) {
+			Square to_sq = pop_square(&mobility);
+			*(move_buff++) = move_ft(sq, to_sq);
+		}
+	}	
+	return move_buff;
+}
+
+Move* pseudo_legal_moves_for_color(State st, Move* move_buff, Color col, bool violent, bool quiet) {
+	Bitboard us = st.by_color[col];
+	Move* ptr = move_buff;
+	while (us) {
+		Square sq = pop_square(&us);
+		Piece p = piece_at_square(st, sq);
+		ptr = pseudo_legal_moves_for_piece_at_square(st, p, sq, ptr, violent, quiet);
+	}
+	return ptr;
+}
+
+Move* pseudo_legal_moves_for_turn(State st, Move* move_buff, bool violent, bool quiet) {
+	return pseudo_legal_moves_for_color(st, move_buff, st.turn, violent, quiet);
+}
+
+Move* generate_pseudo_legal(State st, Move* move_buff) {
+	return pseudo_legal_moves_for_turn(st, move_buff, true, true);
+}

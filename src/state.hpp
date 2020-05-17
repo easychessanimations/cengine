@@ -7,6 +7,7 @@
 #include "piece.hpp"
 #include "square.hpp"
 #include "bitboard.hpp"
+#include "attack.hpp"
 
 extern int split(std::string str, std::string delim, std::string *buff);
 
@@ -23,5 +24,7 @@ extern State state_from_fen(std::string fen);
 extern Piece fen_symbol_to_piece(std::string fen_symbol);
 
 extern std::string pretty_state(State st);
+
+extern Move* generate_pseudo_legal(State st, Move* move_buff);
 
 #endif

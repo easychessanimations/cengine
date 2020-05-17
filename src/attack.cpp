@@ -156,7 +156,7 @@ MagicAndShift find_magic_and_shift(Square sq, Delta* deltas, int max_shift, int 
 
 int total_space;
 
-bool VERBOSE = true;
+bool VERBOSE = false;
 
 bool find_magics(std::string label, Delta* deltas, MagicAndShift *store) {
 	if(VERBOSE) std::cout << "finding magics for " << label << std::endl;	
@@ -215,13 +215,13 @@ void init_pawn_infos() {
 			pi.num_pushes = 0;
 			pi.num_captures = 0;
 			Square curr_sq = sq;
-			Rank rank_dir = col == WHITE ? 1 : -1;
+			Rank rank_dir = (col == WHITE ? 1 : -1);
 			if (add_delta(&curr_sq, Delta{ rank_dir,0 })) {
 				Square push_one_sq = curr_sq;
 				pi.pushes[pi.num_pushes++] = move_ft(sq, push_one_sq);
 				for (File capt = -1;capt <= 1;capt += 2) {
 					Square capt_sq = push_one_sq;
-					if (add_delta(&capt_sq, Delta{ capt,0 })) {
+					if (add_delta(&capt_sq, Delta{ 0, capt })) {
 						pi.captures[pi.num_captures++] = move_ft(sq, capt_sq);
 					}
 				}
@@ -233,6 +233,7 @@ void init_pawn_infos() {
 					}
 				}
 			}
+			PAWN_INFOS[col][sq] = pi;
 		}
 	}	
 }
