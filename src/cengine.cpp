@@ -13,10 +13,10 @@ extern "C" {
         init_bitboards();
         init_attacks();
 
-        /*Bitboard bb = jump_attack(SQUARE_B2, (Delta*)KNIGHT_DELTAS);        
+        Bitboard bb = sliding_mobility(SQUARE_E4, (Delta*)ROOK_DELTAS, ROOK_MAGICS, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true, false);
         std::cout << pretty_bitboard(bb);
 
-        std::cout << (int)variation_count(bb) << std::endl;
+        /*std::cout << (int)variation_count(bb) << std::endl;
 
         PartialMask mask = 0;
 

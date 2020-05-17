@@ -215,3 +215,14 @@ bool init_attacks() {
 	std::cout << "info string initializing magics done" << std::endl;
 	return true;
 }
+
+Bitboard sliding_mobility(Square sq, Delta* deltas, MagicAndShift *magics, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet, bool jump_over_own_piece) {	
+	MagicAndShift ms = magics[sq];
+	Bitboard occup = jump_over_own_piece ? occup_them : (occup_us | occup_them);
+	int key = magic_key(ms.magic, ms.shift, occup & magic_attack(sq, deltas, EMPTY_BB));	
+	Bitboard mobility = ms.lookup[key];	
+	Bitboard final_mobility = EMPTY_BB;
+	if (violent) final_mobility |= (mobility & occup_them);
+	if (quiet) final_mobility |= (mobility & (~occup_them));		
+	return final_mobility & (~occup_us);
+}

@@ -59,4 +59,6 @@ extern MagicAndShift ROOK_MAGICS[BOARD_AREA];
 extern bool find_magics(std::string label, Delta* deltas, MagicAndShift *store);
 
 extern bool init_attacks();
+
+extern Bitboard sliding_mobility(Square sq, Delta* deltas, MagicAndShift* magics, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet, bool jump_over_own_piece);
 #endif
