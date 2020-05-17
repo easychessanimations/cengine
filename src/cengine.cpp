@@ -12,16 +12,15 @@ extern "C" {
     void init() {
         init_bitboards();
 
-        Bitboard bb = 0x3000000000000001;        
+        Bitboard bb = sliding_attack(SQUARE_A1, (Delta*)BISHOP_DELTAS, bitboard_of(SQUARE_D4));        
         std::cout << pretty_bitboard(bb);
 
-        std::cout << (int)pop_cnt(bb) << std::endl;
+        std::cout << (int)variation_count(bb) << std::endl;
 
         PartialMask mask = 0;
 
-        while(mask < variation_count(bb)){            
-            Bitboard partial_occup = mask_to_partial_occup(mask, bb);
-            std::cout << pretty_bitboard((Bitboard)mask);
+        while(mask < 5){            
+            Bitboard partial_occup = mask_to_partial_occup(mask, bb);            
             std::cout << pretty_bitboard(partial_occup);           
             mask++;
         }

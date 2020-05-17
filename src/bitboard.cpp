@@ -27,7 +27,7 @@ std::string pretty_bitboard(Bitboard bb) {
 				buff += RANK_NAMES[LAST_RANK - rank] + " ";
 			}
 			if ((bb & rank_file_to_bitboard(rank, file)) == 0) {
-				buff += "0";
+				buff += ".";
 			} else {
 				buff += "1";
 			}
