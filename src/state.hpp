@@ -27,4 +27,6 @@ extern std::string pretty_state(State st);
 
 extern Move* generate_pseudo_legal(State st, Move* move_buff);
 
+extern void make_move(State* st, Move move);
+
 #endif

@@ -209,3 +209,13 @@ Move* pseudo_legal_moves_for_turn(State st, Move* move_buff, bool violent, bool 
 Move* generate_pseudo_legal(State st, Move* move_buff) {
 	return pseudo_legal_moves_for_turn(st, move_buff, true, true);
 }
+
+void make_move(State* st, Move move) {
+	Square from_sq = from_sq_of(move);
+	Square to_sq = to_sq_of(move);
+	Piece from_p = piece_at_square(*st, from_sq);
+	Piece to_p = piece_at_square(*st, to_sq);
+	remove_piece_from_square(st, from_sq);
+	put_piece_at_square(st, from_p, to_sq);
+	st->turn = 1 - st->turn;
+}
