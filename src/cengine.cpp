@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstdint>
 
 #include "piece.hpp"
 #include "square.hpp"
@@ -10,14 +11,13 @@ extern "C" {
     void init() {
         init_bitboards();
 
-        Bitboard bb = 0x0f00000000000f00;
-                
+        Bitboard bb = 0x1000000000000001;        
         std::cout << pretty_bitboard(bb);
+
         while(bb != 0){            
-            SquareBitboard sqb = pop_square_bitboard(&bb);                        
+            Square sq = pop_square(&bb);
             std::cout << pretty_bitboard(bb);
-            std::cout << uci_of_square(sqb.sq) << std::endl;            
-            std::cout << pretty_bitboard(sqb.bb);
+            std::cout << uci_of_square(sq) << std::endl;                        
         }
 
         std::cout << "cengine initialized\n" << std::endl;

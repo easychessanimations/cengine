@@ -1,7 +1,6 @@
 // preamble
 
 var execute_uci_command = Module.cwrap('execute_uci_command', '', ['string'])
-var init = Module.cwrap('init', '', [''])
 
 onmessage = ev => {
 	let data = ev.data
@@ -12,7 +11,7 @@ onmessage = ev => {
 
 	if(kind == "welcome"){
 		postMessage({
-			kind: "welcome ack",
+			kind: "welcomeack",
 			content: "hi, app !"
 		})
 	}
@@ -22,4 +21,3 @@ onmessage = ev => {
 	}
 }
 
-Module['onRuntimeInitialized'] = init
