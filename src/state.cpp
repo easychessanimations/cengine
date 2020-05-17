@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
+#include <chrono>
 
 #include "state.hpp"
 #include "attack.hpp"
@@ -218,4 +219,43 @@ void make_move(State* st, Move move) {
 	remove_piece_from_square(st, from_sq);
 	put_piece_at_square(st, from_p, to_sq);
 	st->turn = 1 - st->turn;
+}
+
+int nodes;
+
+void push_state(LinearGame* lg) {
+	lg->states[lg->state_ptr + 1] = lg->states[lg->state_ptr];
+	lg->state_ptr++;
+}
+
+void pop_state(LinearGame* lg) {	
+	lg->state_ptr--;
+}
+
+void perft_rec(LinearGame* lg, int rem_depth) {
+	nodes++;
+	if (rem_depth <= 0) {
+		return;
+	}
+	Move move_buff[200];
+	Move* last = generate_pseudo_legal(lg->states[lg->state_ptr], move_buff);
+	Move* ptr = move_buff;
+	while (ptr < last) {
+		push_state(lg);
+		make_move(&lg->states[lg->state_ptr], *ptr++);
+		perft_rec(lg, rem_depth - 1);
+		pop_state(lg);
+	}
+}
+
+void perft(LinearGame* lg, int depth) {
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();	
+	nodes = 0;
+	lg->state_ptr = 0;
+
+	perft_rec(lg, depth);
+
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << "time " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
+	std::cout << "nodes " << nodes << std::endl;
 }

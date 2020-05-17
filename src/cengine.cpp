@@ -8,6 +8,8 @@
 #include "attack.hpp"
 #include "state.hpp"
 
+LinearGame lg;
+
 extern "C" {
 
     void init() {
@@ -18,9 +20,14 @@ extern "C" {
 
         //std::cout << pretty_bitboard(st.by_color[WHITE]);
 
-        make_move(&st, move_ft(SQUARE_E2, SQUARE_E4));
+        //make_move(&st, move_ft(SQUARE_E2, SQUARE_E4));
+
+        lg.states[0] = st;
+        lg.state_ptr = 0;
 
         std::cout << pretty_state(st) << std::endl;
+
+        perft(&lg, 5);
 
         /*Bitboard bb = queen_mobility(SQUARE_E4, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true);
         std::cout << pretty_bitboard(bb);*/

@@ -29,4 +29,13 @@ extern Move* generate_pseudo_legal(State st, Move* move_buff);
 
 extern void make_move(State* st, Move move);
 
+const int MAX_STATES = 100;
+
+struct LinearGame {
+	State states[MAX_STATES];
+	int state_ptr;
+};
+
+extern void perft(LinearGame* lg, int depth);
+
 #endif
