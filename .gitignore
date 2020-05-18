@@ -10,8 +10,8 @@ x64/
 !/srcweb/preamble.js
 !/gen.js
 
-cengine.vcxproj
-cengine.vcxproj.*
+#cengine.vcxproj
+#cengine.vcxproj.*
 
 gen.txt
 magics.txt
