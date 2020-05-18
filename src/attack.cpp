@@ -239,7 +239,7 @@ void init_pawn_infos() {
 }
 
 bool init_attacks() {
-	std::cout << "info string initializing attacks" << std::endl;
+	if(VERBOSE) std::cout << "info string initializing attacks" << std::endl;
 	for (Square sq = 0;sq < BOARD_AREA;sq++) {
 		BISHOP_ATTACK[sq] = sliding_attack(sq, (Delta*)BISHOP_DELTAS, EMPTY_BB);
 		BISHOP_MAGIC_ATTACK[sq] = magic_mobility(sq, BISHOP_ATTACK[sq]);
@@ -258,14 +258,14 @@ bool init_attacks() {
 		std::cout << "init attacks failed" << std::endl;
 		return false;
 	}
-	std::cout << "info string init attacks done total space " << total_space << std::endl;
-	std::cout << "info string initializing magics" << std::endl;
+	if(VERBOSE) std::cout << "info string init attacks done total space " << total_space << std::endl;
+	if(VERBOSE) std::cout << "info string initializing magics" << std::endl;
 	build_magics(BISHOP_MAGICS, (Delta*)BISHOP_DELTAS);
 	build_magics(ROOK_MAGICS, (Delta*)ROOK_DELTAS);
-	std::cout << "info string initializing magics done" << std::endl;
-	std::cout << "info string initializing pawn infos" << std::endl;
+	if(VERBOSE) std::cout << "info string initializing magics done" << std::endl;
+	if(VERBOSE) std::cout << "info string initializing pawn infos" << std::endl;
 	init_pawn_infos();
-	std::cout << "info string initializing pawn infos done" << std::endl;
+	if(VERBOSE) std::cout << "info string initializing pawn infos done" << std::endl;
 	return true;
 }
 
