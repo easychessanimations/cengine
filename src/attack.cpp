@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "main.hpp"
+
 #include "attack.hpp"
 #include "square.hpp"
 #include "bitboard.hpp"
@@ -173,7 +175,7 @@ bool find_magics(std::string label, Delta* deltas, MagicAndShift *store) {
 		total_space += (1 << ms.shift);
 		if (VERBOSE) std::cout << "found magic with shift " << ms.shift << " against min shift " << min_shift << " total space " << total_space << std::endl;
 		char puff[20]="";
-		//sprintf(puff, "0x%016llx", ms.magic);
+		SPRINTF(puff, "0x%016llx", ms.magic);
 		if (VERBOSE) std::cout << "magic for " << label << " square " << uci_of_square(sq) << " magic " << puff << " shift " << ms.shift << std::endl;
 		store[sq] = ms;
 	}

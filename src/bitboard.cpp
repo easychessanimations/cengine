@@ -1,6 +1,7 @@
 #include <string>
 #include <stdio.h>
 
+#include "main.hpp"
 #include "bitboard.hpp"
 #include "square.hpp"
 
@@ -18,7 +19,7 @@ void init_bitboards() {
 
 std::string pretty_bitboard(Bitboard bb) {
 	char puff[50]="";
-	//sprintf(puff, "bitboard 0x%016llx\n", bb);
+	SPRINTF(puff, "bitboard 0x%016llx\n", bb);
 	std::string buff = puff;
 
 	for (Rank rank = LAST_RANK; rank >= 0; rank--) {
