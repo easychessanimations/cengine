@@ -19,21 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\attack.cpp" />
-    <ClCompile Include="src\bitboard.cpp" />
-    <ClCompile Include="src\cengine.cpp" />
-    <ClCompile Include="src\piece.cpp" />
-    <ClCompile Include="src\square.cpp" />
-    <ClCompile Include="src\state.cpp">
+<ClCompile Include="src/attack.cpp" />
+<ClCompile Include="src/bitboard.cpp" />
+<ClCompile Include="src/cengine.cpp" />
+<ClCompile Include="src/piece.cpp" />
+<ClCompile Include="src/square.cpp" />
+<ClCompile Include="src/state.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\attack.hpp" />
-    <ClInclude Include="src\bitboard.hpp" />
-    <ClInclude Include="src\piece.hpp" />
-    <ClInclude Include="src\square.hpp" />
-    <ClInclude Include="src\state.hpp" />
+<ClInclude Include="src/attack.hpp" />
+<ClInclude Include="src/bitboard.hpp" />
+<ClInclude Include="src/main.hpp" />
+<ClInclude Include="src/piece.hpp" />
+<ClInclude Include="src/square.hpp" />
+<ClInclude Include="src/state.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

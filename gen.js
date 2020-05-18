@@ -225,3 +225,40 @@ inline PartialMask variation_count(Bitboard bb){
 `
 
 fs.writeFileSync("src/bitboard.hpp", bitboard_hpp)
+
+const projPath = "cengine.vcxproj"
+
+function collect(content, term, ext, items){
+	let termOn = false
+	let out = []
+	for(let line of content.split("\n")){
+		if(termOn){
+			if(!line.match(new RegExp(term))){
+				termOn = false
+				let i = 1
+				let filtered = items.filter(item => item.match(new RegExp("\."+ext+"$")))
+				for(let item of filtered){
+					let close = i==filtered.length ? "" : " /"					
+					if(!term.match(/ClCompile/)) close = " /"
+					out.push(`<${term}="src/${item}"${close}>`)
+					i++
+				}
+				out.push(line)
+			}
+		}else{
+			if(line.match(new RegExp(term))){
+				termOn = true
+			}else out.push(line)
+		}
+	}
+	return out.join("\n")
+}
+
+fs.readdir("src", (_,items)=>{
+	let proj = fs.readFileSync(projPath).toString()
+
+	proj = collect(proj, "ClCompile Include", "cpp", items)
+	proj = collect(proj, "ClInclude Include", "hpp", items)
+
+	fs.writeFileSync(projPath, proj)
+});
