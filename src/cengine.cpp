@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdint>
 
+#include "main.hpp"
 #include "piece.hpp"
 #include "square.hpp"
 #include "bitboard.hpp"
@@ -26,6 +27,10 @@ extern "C" {
         lg.state_ptr = 0;
 
         std::cout << pretty_state(st) << std::endl;
+
+        BSPRINTF(sbuff, "buff %10s", "test");
+
+        std::cout << sbuff << std::endl;
 
         //perft(&lg, 5);
 
