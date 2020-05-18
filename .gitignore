@@ -1,4 +1,5 @@
 Debug/
+x64/
 
 *.wasm
 *.js

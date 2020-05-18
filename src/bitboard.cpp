@@ -17,8 +17,8 @@ void init_bitboards() {
 }
 
 std::string pretty_bitboard(Bitboard bb) {
-	char puff[50];
-	sprintf(puff, "bitboard 0x%016llx\n", bb);
+	char puff[50]="";
+	//sprintf(puff, "bitboard 0x%016llx\n", bb);
 	std::string buff = puff;
 
 	for (Rank rank = LAST_RANK; rank >= 0; rank--) {
