@@ -2,14 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <chrono>
+#include <algorithm>
+#include <cctype>
+#include <string>
 
 #include "main.hpp"
 #include "state.hpp"
 #include "attack.hpp"
-
-#include <algorithm>
-#include <cctype>
-#include <string>
 
 std::string to_lower(std::string data){
 	std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });

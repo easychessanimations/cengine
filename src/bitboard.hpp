@@ -23,8 +23,17 @@ const Bitboard FILE_A_BB        = 0x0101010101010101;
 const Bitboard FILE_H_BB        = 0x8080808080808080;
 const Bitboard RANK_1_MIDDLE_BB = 0x000000000000007E;
 const Bitboard RANK_8_MIDDLE_BB = 0x7E00000000000000;
+
+#define SWITCH_FILE_A_AND_H
+
+#ifndef SWITCH_FILE_A_AND_H
+const Bitboard FILE_A_MIDDLE_BB = 0x0080808080808000;
+const Bitboard FILE_H_MIDDLE_BB = 0x0001010101010100;
+#else
 const Bitboard FILE_A_MIDDLE_BB = 0x0001010101010100;
 const Bitboard FILE_H_MIDDLE_BB = 0x0080808080808000;
+#endif
+
 const Bitboard MIDDLE_BB        = (~FILE_A_BB) & (~FILE_H_BB) & (~RANK_1_BB) & (~RANK_8_BB);
 
 extern std::string pretty_bitboard(Bitboard bb);

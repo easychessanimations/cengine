@@ -8,6 +8,7 @@
 #include "bitboard.hpp"
 #include "attack.hpp"
 #include "state.hpp"
+#include "search.hpp"
 
 LinearGame lg;
 
@@ -142,6 +143,10 @@ extern "C" {
                 perft(&lg, depth);
                 std::cout << std::endl;
                 return;
+            }
+
+            if(command=="g"){
+                search(&lg, 6);
             }
         }
     }

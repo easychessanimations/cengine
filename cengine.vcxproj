@@ -23,6 +23,7 @@
 <ClCompile Include="src/bitboard.cpp" />
 <ClCompile Include="src/cengine.cpp" />
 <ClCompile Include="src/piece.cpp" />
+<ClCompile Include="src/search.cpp" />
 <ClCompile Include="src/square.cpp" />
 <ClCompile Include="src/state.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -33,6 +34,7 @@
 <ClInclude Include="src/bitboard.hpp" />
 <ClInclude Include="src/main.hpp" />
 <ClInclude Include="src/piece.hpp" />
+<ClInclude Include="src/search.hpp" />
 <ClInclude Include="src/square.hpp" />
 <ClInclude Include="src/state.hpp" />
   </ItemGroup>
