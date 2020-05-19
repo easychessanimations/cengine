@@ -265,7 +265,7 @@ void make_move(State* st, Move move) {
 	st->turn = 1 - st->turn;
 }
 
-int nodes;
+long int nodes;
 
 void push_state(LinearGame* lg) {
 	lg->states[lg->state_ptr + 1] = lg->states[lg->state_ptr];
