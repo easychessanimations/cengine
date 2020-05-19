@@ -265,7 +265,7 @@ void make_move(State* st, Move move) {
 	st->turn = 1 - st->turn;
 }
 
-long int nodes;
+long long int nodes;
 
 void push_state(LinearGame* lg) {
 	lg->states[lg->state_ptr + 1] = lg->states[lg->state_ptr];
@@ -289,7 +289,7 @@ void perft_rec(LinearGame* lg, int current_depth, int max_depth) {
 	while (ptr < last) {
 		push_state(lg);				
 		make_move(&lg->states[lg->state_ptr], *ptr++); 
-		int nodes_start = nodes;
+		long long int nodes_start = nodes;
 		perft_rec(lg, current_depth + 1, max_depth);
 		if(current_depth == 0) std::cout << uci_of_move(*(ptr-1)) << ": " << nodes - nodes_start << std::endl;
 		pop_state(lg);
@@ -305,7 +305,7 @@ void perft(LinearGame* lg, int depth) {
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	std::cout << std::endl << "time " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
-	BSPRINTF(nbuff, "%ld", nodes);
+	BSPRINTF(nbuff, "%lld", nodes);
 	std::cout << "nodes " << nbuff << std::endl;
 }
 
