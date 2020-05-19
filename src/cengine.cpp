@@ -26,16 +26,25 @@ extern "C" {
         lg.states[0] = st;
         lg.state_ptr = 0;
 
-        std::cout << pretty_state(st) << std::endl;
+        /*std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[WHITE]);    
+        std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[BLACK]);*/
 
-        BSPRINTF(sbuff, "buff %10s", "test");
+        //std::cout << pretty_state(&st) << std::endl;
 
-        std::cout << sbuff << std::endl;
+        /*BSPRINTF(sbuff, "buff %10s", "test");
 
-        //perft(&lg, 5);
+        std::cout << sbuff << std::endl;*/
 
-        Bitboard bb = queen_mobility(SQUARE_E4, bitboard_of(SQUARE_E6), bitboard_of(SQUARE_F4), true, true);
-        std::cout << pretty_bitboard(bb);
+        /*for(Square sq=0;sq<BOARD_AREA;sq++){
+            Bitboard bb = bitboard_of(sq);
+            Square tsq = pop_square(&bb);
+            std::cout << uci_of_square(tsq) << std::endl;
+        }*/
+
+        perft(&lg, 5);
+
+        /*Bitboard bb = rook_mobility(SQUARE_A1, bitboard_of(SQUARE_A2), bitboard_of(SQUARE_B7), true, true);
+        std::cout << pretty_bitboard(ROOK_MAGIC_ATTACK[SQUARE_A1]);*/
 
         /*std::cout << (int)variation_count(bb) << std::endl;
 
@@ -57,6 +66,9 @@ extern "C" {
             std::cout << command << " command recognized but not supported in this mode" << std::endl;
         } else {
             std::cout << "received command " << command << std::endl;
+            if(command == "p"){
+                perft(&lg, 2);
+            }
         }
     }
 

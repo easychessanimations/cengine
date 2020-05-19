@@ -23,11 +23,11 @@ extern State state_from_fen(std::string fen);
 
 extern Piece fen_symbol_to_piece(std::string fen_symbol);
 
-extern std::string pretty_state(State st);
+extern std::string pretty_state(State *st);
 
-extern Move* generate_pseudo_legal(State st, Move* move_buff);
+extern Move* generate_pseudo_legal(State *st, Move* move_buff);
 
-extern void make_move(State* st, Move move);
+extern void make_move(State *st, Move move);
 
 const int MAX_STATES = 100;
 

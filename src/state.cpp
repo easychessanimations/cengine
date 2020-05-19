@@ -30,12 +30,12 @@ Piece fen_symbol_to_piece(std::string fen_symbol) {
 	return NO_PIECE;
 }
 
-Piece piece_at_square(State st, Square sq) {
-	return st.rep[sq];
+Piece piece_at_square(State *st, Square sq) {
+	return st->rep[sq];
 }
 
 void remove_piece_from_square(State *st, Square sq) {
-	Piece p = piece_at_square(*st, sq);
+	Piece p = piece_at_square(st, sq);
 	if (p == NO_PIECE) {
 		return;
 	}
@@ -46,7 +46,10 @@ void remove_piece_from_square(State *st, Square sq) {
 }
 
 void put_piece_at_square(State* st, Piece p, Square sq) {
-	remove_piece_from_square(st, sq);
+	if(p==NO_PIECE){
+		return;
+	}
+	remove_piece_from_square(st, sq);	
 	Bitboard bb = bitboard_of(sq);
 	st->by_color[color_of(p)] |= bb;
 	st->by_figure[figure_of(p)] |= bb;
@@ -101,7 +104,7 @@ State state_from_fen(std::string fen) {
 	return st;
 }
 
-std::string pretty_state(State st) {
+std::string pretty_state(State *st) {
 	std::string buff = "";
 	for (Rank rank = LAST_RANK; rank >= 0; rank--) {		
 		for (File file = 0; file < NUM_FILES; file++) {
@@ -115,7 +118,7 @@ std::string pretty_state(State st) {
 	}
 	buff += "\n  abcdefgh\n";
 	buff += "\nturn ";
-	if (st.turn == WHITE) {
+	if (st->turn == WHITE) {
 		buff += "w";
 	}
 	else {
@@ -139,11 +142,11 @@ std::string pretty_state(State st) {
 	return buff + "\n";
 }
 
-Bitboard mobility_for_piece_at_square(State st, Piece p, Square sq, bool violent, bool quiet) {
+Bitboard mobility_for_piece_at_square(State *st, Piece p, Square sq, bool violent, bool quiet) {
 	Color col = color_of(p);
 	Figure fig = figure_of(p);
-	Bitboard occup_us = st.by_color[col];
-	Bitboard occup_them = st.by_color[1-col];
+	Bitboard occup_us = st->by_color[col];
+	Bitboard occup_them = st->by_color[1-col];
 	switch (fig) {
 	case BISHOP:
 		return bishop_mobility(sq, occup_us, occup_them, violent, quiet);
@@ -160,7 +163,7 @@ Bitboard mobility_for_piece_at_square(State st, Piece p, Square sq, bool violent
 	}	
 }
 
-Move* pseudo_legal_moves_for_piece_at_square(State st, Piece p, Square sq, Move* move_buff, bool violent, bool quiet) {
+Move* pseudo_legal_moves_for_piece_at_square(State *st, Piece p, Square sq, Move* move_buff, bool violent, bool quiet) {
 	//std::cout << uci_of_square(sq) << " " << fen_symbol_of(p) << " " << std::endl;
 	Figure fig = figure_of(p);
 	Color col = color_of(p);
@@ -192,8 +195,8 @@ Move* pseudo_legal_moves_for_piece_at_square(State st, Piece p, Square sq, Move*
 	return move_buff;
 }
 
-Move* pseudo_legal_moves_for_color(State st, Move* move_buff, Color col, bool violent, bool quiet) {
-	Bitboard us = st.by_color[col];
+Move* pseudo_legal_moves_for_color(State *st, Move* move_buff, Color col, bool violent, bool quiet) {
+	Bitboard us = st->by_color[col];
 	Move* ptr = move_buff;
 	while (us) {
 		Square sq = pop_square(&us);
@@ -203,19 +206,19 @@ Move* pseudo_legal_moves_for_color(State st, Move* move_buff, Color col, bool vi
 	return ptr;
 }
 
-Move* pseudo_legal_moves_for_turn(State st, Move* move_buff, bool violent, bool quiet) {
-	return pseudo_legal_moves_for_color(st, move_buff, st.turn, violent, quiet);
+Move* pseudo_legal_moves_for_turn(State *st, Move* move_buff, bool violent, bool quiet) {
+	return pseudo_legal_moves_for_color(st, move_buff, st->turn, violent, quiet);
 }
 
-Move* generate_pseudo_legal(State st, Move* move_buff) {
+Move* generate_pseudo_legal(State *st, Move* move_buff) {
 	return pseudo_legal_moves_for_turn(st, move_buff, true, true);
 }
 
 void make_move(State* st, Move move) {
 	Square from_sq = from_sq_of(move);
 	Square to_sq = to_sq_of(move);
-	Piece from_p = piece_at_square(*st, from_sq);
-	Piece to_p = piece_at_square(*st, to_sq);
+	Piece from_p = piece_at_square(st, from_sq);
+	Piece to_p = piece_at_square(st, to_sq);
 	remove_piece_from_square(st, from_sq);
 	put_piece_at_square(st, from_p, to_sq);
 	st->turn = 1 - st->turn;
@@ -232,17 +235,19 @@ void pop_state(LinearGame* lg) {
 	lg->state_ptr--;
 }
 
-void perft_rec(LinearGame* lg, int rem_depth) {
+void perft_rec(LinearGame* lg, int rem_depth) {	
 	nodes++;
+	//std::cout << pretty_state(&lg->states[lg->state_ptr]);		
 	if (rem_depth <= 0) {
 		return;
 	}
 	Move move_buff[200];
-	Move* last = generate_pseudo_legal(lg->states[lg->state_ptr], move_buff);
+	Move* last = generate_pseudo_legal(&lg->states[lg->state_ptr], move_buff);
 	Move* ptr = move_buff;
 	while (ptr < last) {
 		push_state(lg);
-		make_move(&lg->states[lg->state_ptr], *ptr++);
+		//std::cout << uci_of_move(*ptr) << std::endl;
+		make_move(&lg->states[lg->state_ptr], *ptr++);		
 		perft_rec(lg, rem_depth - 1);
 		pop_state(lg);
 	}
