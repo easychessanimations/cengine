@@ -32,6 +32,8 @@ extern std::string pretty_state(State *st);
 
 extern Move* generate_pseudo_legal(State *st, Move* move_buff);
 
+extern Move* generate_legal(State *st, Move* move_buff);
+
 extern void make_move(State *st, Move move);
 
 const int MAX_STATES = 100;
@@ -44,5 +46,11 @@ struct LinearGame {
 extern void push_state(LinearGame *lg);
 
 extern void perft(LinearGame* lg, int depth);
+
+extern Figure least_attacker_on_square_of_color(State *st, Square sq, Color col);
+
+extern bool is_in_check_color(State *st, Color col);
+
+extern bool is_in_check(State *st);
 
 #endif

@@ -126,7 +126,7 @@ int comp_moves(const void *m1, const void *m2){
 Move sorted_move_buff[MAX_MOVES];
 
 Move *sorted_moves(State *st){
-	Move* last_move = generate_pseudo_legal(st, sorted_move_buff);
+	Move* last_move = generate_legal(st, sorted_move_buff);
 
 	sorted_state = st;
 	qsort(sorted_move_buff, last_move - sorted_move_buff, sizeof(Move), comp_moves);
@@ -272,7 +272,7 @@ void perft_rec(LinearGame* lg, int rem_depth) {
 		return;
 	}
 	Move move_buff[200];
-	Move* last = generate_pseudo_legal(&lg->states[lg->state_ptr], move_buff);
+	Move* last = generate_legal(&lg->states[lg->state_ptr], move_buff);
 	Move* ptr = move_buff;
 	while (ptr < last) {
 		push_state(lg);
@@ -293,4 +293,59 @@ void perft(LinearGame* lg, int depth) {
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	std::cout << "time " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
 	std::cout << "nodes " << nodes << std::endl;
+}
+
+Figure least_attacker_on_square_of_color(State *st, Square sq, Color col){
+	PawnInfo pi = PAWN_INFOS[1-col][sq];
+	for(int i=0;i<pi.num_captures;i++){
+		Piece p = piece_at_square(st, to_sq_of(pi.captures[i]));
+		if(p!=NO_PIECE){
+			if(color_of(p) == col){
+				return PAWN;
+			}
+		}
+	}
+	for(Figure fig = KNIGHT; fig <= KING; fig++){
+		Bitboard mob = mobility_for_piece_at_square(st, color_figure(1-col, fig), sq, true, false);
+		Square test_sq;
+		Piece test_p = color_figure(col, fig);
+		while(mob){
+			test_sq = pop_square(&mob);
+			if(piece_at_square(st, test_sq) == test_p){
+				return fig;
+			}
+		}
+	}
+	return NO_FIGURE;
+}
+
+bool is_in_check_color(State *st, Color col){
+	Bitboard king_bb = st->by_color[col] & st->by_figure[KING];
+
+	if(!king_bb){
+		return true;
+	}
+
+	Square king_sq = pop_square(&king_bb);
+
+	return least_attacker_on_square_of_color(st, king_sq, 1-col) != NO_FIGURE;
+}
+
+bool is_in_check(State *st){
+	return is_in_check_color(st, st->turn);
+}
+
+Move pseudo_buff[MAX_MOVES];
+
+Move* generate_legal(State *st, Move* move_buff){
+	Move *last_move = generate_pseudo_legal(st, pseudo_buff);
+	Move *lptr = move_buff;
+	for(Move *ptr = pseudo_buff; ptr < last_move; ptr++){
+		State test_st = *st;
+		make_move(&test_st, *ptr);
+		if(!is_in_check_color(&test_st, st->turn)){
+			*lptr++ = *ptr;
+		}
+	}
+	return lptr;
 }
