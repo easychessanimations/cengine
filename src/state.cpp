@@ -276,20 +276,22 @@ void pop_state(LinearGame* lg) {
 	lg->state_ptr--;
 }
 
-void perft_rec(LinearGame* lg, int rem_depth) {		
+void perft_rec(LinearGame* lg, int current_depth, int max_depth) {		
 	//std::cout << pretty_state(&lg->states[lg->state_ptr]);		
-	if (rem_depth <= 0) {
+	if (current_depth == max_depth) {
 		nodes++;
 		return;
 	}
 	Move move_buff[200];
-	Move* last = generate_legal(&lg->states[lg->state_ptr], move_buff);
+	State *curr = &lg->states[lg->state_ptr];
+	Move* last = generate_legal(curr, move_buff);
 	Move* ptr = move_buff;
 	while (ptr < last) {
-		push_state(lg);
-		//std::cout << uci_of_move(*ptr) << std::endl;
-		make_move(&lg->states[lg->state_ptr], *ptr++);		
-		perft_rec(lg, rem_depth - 1);
+		push_state(lg);				
+		make_move(&lg->states[lg->state_ptr], *ptr++); 
+		int nodes_start = nodes;
+		perft_rec(lg, current_depth + 1, max_depth);
+		if(current_depth == 0) std::cout << uci_of_move(*ptr) << ": " << nodes - nodes_start << std::endl;
 		pop_state(lg);
 	}
 }
@@ -299,10 +301,10 @@ void perft(LinearGame* lg, int depth) {
 	nodes = 0;
 	lg->state_ptr = 0;
 
-	perft_rec(lg, depth);
+	perft_rec(lg, 0, depth);
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cout << "time " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
+	std::cout << std::endl << "time " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
 	std::cout << "nodes " << nodes << std::endl;
 }
 

@@ -137,7 +137,7 @@ extern "C" {
                     }
                 }
                 if(depth <= 0) depth = 1;
-                if(depth > 6) depth = 6;
+                if(depth > 6) depth = 7;
                 std::cout << "doing perft " << depth << std::endl << std::endl;
                 perft(&lg, depth);
                 std::cout << std::endl;
