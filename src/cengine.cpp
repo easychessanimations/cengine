@@ -85,6 +85,7 @@ extern "C" {
             ToIntResult ti = to_int(command.c_str());
 
             if(ti.ok){                
+                ti.value--;
                 Move* last_move = sorted_moves(curr);                
                 if((ti.value >= 0)&&(ti.value < (last_move-sorted_move_buff))){
                     push_state(&lg);

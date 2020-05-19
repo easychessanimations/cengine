@@ -124,7 +124,7 @@ std::string move_to_san(State *st, Move move){
 		letter = san_letter_of(from_p);
 	}
 	bool is_capture = to_p != NO_PIECE;
-	std::string from_spec = from_p == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
+	std::string from_spec = figure_of(from_p) == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
 	std::string takes = is_capture ? "x" : "";
 	std::string to_spec = uci_of_square(to_sq);
 	return letter + from_spec + takes + to_spec;
