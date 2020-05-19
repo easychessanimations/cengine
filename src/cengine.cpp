@@ -146,7 +146,14 @@ extern "C" {
             }
 
             if(command=="g"){
-                search(&lg, 6);
+                int depth = 5;
+                if(num_tokens > 1){                    
+                    ti = to_int(tokens[1].c_str());
+                    if(ti.ok){
+                        depth = ti.value;
+                    }
+                }
+                search(&lg, depth);
             }
         }
     }

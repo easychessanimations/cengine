@@ -44,6 +44,7 @@ struct LinearGame {
 };
 
 extern void push_state(LinearGame *lg);
+extern void pop_state(LinearGame *lg);
 
 extern void perft(LinearGame* lg, int depth);
 
@@ -54,5 +55,16 @@ extern bool is_in_check_color(State *st, Color col);
 extern bool is_in_check(State *st);
 
 extern std::string move_to_san(State *st, Move move);
+
+extern long long nodes;
+
+typedef int16_t Score;
+
+typedef int8_t Depth;
+
+const Score INFINITE_SCORE = 20000;
+const Score MATE_SCORE = 10000;
+
+extern Score eval_state(State *st);
 
 #endif

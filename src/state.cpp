@@ -163,7 +163,10 @@ std::string pretty_state(State *st) {
 	}
 	else {
 		buff += "b";
-	}
+	}	
+	BSPRINTF(ebuff, "%d", (int)eval_state(st));
+	buff += " ";
+	buff += ebuff;
 	buff += "\n";
 
 	Move *last_move = sorted_moves(st);
@@ -361,4 +364,22 @@ Move* generate_legal(State *st, Move* move_buff){
 		}
 	}
 	return lptr;
+}
+
+Score eval_state(State *st){
+	Score mat = 0;	
+	for(Color col = BLACK; col <= WHITE; col++){
+		Score dir = 2 * col - 1;
+		Bitboard knights = st->by_figure[PAWN] & st->by_color[col];
+		mat += dir * 100 * pop_cnt(knights);
+		Bitboard pawns = st->by_figure[KNIGHT] & st->by_color[col];
+		mat += dir * 300 * pop_cnt(pawns);
+		Bitboard bishops = st->by_figure[BISHOP] & st->by_color[col];
+		mat += dir * 300 * pop_cnt(bishops);
+		Bitboard rooks = st->by_figure[ROOK] & st->by_color[col];
+		mat += dir * 500 * pop_cnt(rooks);
+		Bitboard queens = st->by_figure[QUEEN] & st->by_color[col];
+		mat += dir * 300 * pop_cnt(queens);
+	}
+	return st->turn ? mat : -mat;
 }

@@ -2,8 +2,17 @@
 
 #define SEARCH_HPP
 
+#include <cstdint>
+
 #include "state.hpp"
 
-extern void search(LinearGame *lg, int depth);
+struct AlphaBetaInfo{
+	Score alpha;
+	Score beta;
+	Depth current_depth;
+	Depth max_depth;
+};
+
+extern void search(LinearGame *lg, Depth depth);
 
 #endif
