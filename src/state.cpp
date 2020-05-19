@@ -265,10 +265,10 @@ void pop_state(LinearGame* lg) {
 	lg->state_ptr--;
 }
 
-void perft_rec(LinearGame* lg, int rem_depth) {	
-	nodes++;
+void perft_rec(LinearGame* lg, int rem_depth) {		
 	//std::cout << pretty_state(&lg->states[lg->state_ptr]);		
 	if (rem_depth <= 0) {
+		nodes++;
 		return;
 	}
 	Move move_buff[200];
