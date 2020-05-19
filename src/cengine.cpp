@@ -79,9 +79,10 @@ extern "C" {
 
             ToIntResult ti = to_int(command.c_str());
 
+            Move* last_move = sorted_moves(curr);                
+
             if(ti.ok){                
                 ti.value--;
-                Move* last_move = sorted_moves(curr);                
                 if((ti.value >= 0)&&(ti.value < (last_move-sorted_move_buff))){
                     push_state(&lg);
                     curr=&lg.states[lg.state_ptr];
@@ -89,6 +90,16 @@ extern "C" {
                     print_state();
                 }
                 return;
+            }
+
+            for(Move *ptr = sorted_move_buff; ptr < last_move; ptr++){
+                if(move_to_san(curr, *ptr) == command){
+                    push_state(&lg);
+                    curr=&lg.states[lg.state_ptr];
+                    make_move(curr, *ptr);
+                    print_state();
+                    return;
+                }
             }
 
             if(command == "d"){                                

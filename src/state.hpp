@@ -53,4 +53,6 @@ extern bool is_in_check_color(State *st, Color col);
 
 extern bool is_in_check(State *st);
 
+extern std::string move_to_san(State *st, Move move);
+
 #endif

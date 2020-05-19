@@ -112,7 +112,18 @@ std::string move_to_san(State *st, Move move){
 	std::string from_spec = figure_of(from_p) == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
 	std::string takes = is_capture ? "x" : "";
 	std::string to_spec = uci_of_square(to_sq);
-	return letter + from_spec + takes + to_spec;
+	std::string check = "";
+	State test_st = *st;
+	make_move(&test_st, move);
+	if(is_in_check(&test_st)){
+		check = "+";
+		Move test_buff[MAX_MOVES];
+		Move* last_legal = generate_legal(&test_st, test_buff);
+		if(last_legal == test_buff){
+			check = "#";
+		}
+	}
+	return letter + from_spec + takes + to_spec + check;
 }
 
 State *sorted_state;
