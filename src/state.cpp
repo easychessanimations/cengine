@@ -1,10 +1,20 @@
-#include <string>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <chrono>
 
+#include "main.hpp"
 #include "state.hpp"
 #include "attack.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <string>
+
+std::string to_lower(std::string data){
+	std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
+	return data;
+}
 
 int split(std::string str, std::string delim, std::string *buff) {
 	int index = int(str.find(delim));
@@ -104,6 +114,41 @@ State state_from_fen(std::string fen) {
 	return st;
 }
 
+std::string move_to_san(State *st, Move move){
+	Square from_sq = from_sq_of(move);
+	Square to_sq = to_sq_of(move);
+	Piece from_p = piece_at_square(st, from_sq);
+	Piece to_p = piece_at_square(st, to_sq);
+	std::string letter = "";
+	if(figure_of(from_p)!=PAWN){
+		letter = san_letter_of(from_p);
+	}
+	bool is_capture = to_p != NO_PIECE;
+	std::string from_spec = from_p == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
+	std::string takes = is_capture ? "x" : "";
+	std::string to_spec = uci_of_square(to_sq);
+	return letter + from_spec + takes + to_spec;
+}
+
+State *sorted_state;
+
+int comp_moves(const void *m1, const void *m2){
+	std::string san1 = to_lower(move_to_san(sorted_state, *((Move*)m1)));
+	std::string san2 = to_lower(move_to_san(sorted_state, *((Move*)m2)));
+	return san1 > san2 ? 1 : -1;
+}
+
+Move sorted_move_buff[MAX_MOVES];
+
+Move *sorted_moves(State *st){
+	Move* last_move = generate_pseudo_legal(st, sorted_move_buff);
+
+	sorted_state = st;
+	qsort(sorted_move_buff, last_move - sorted_move_buff, sizeof(Move), comp_moves);
+
+	return last_move;
+}
+
 std::string pretty_state(State *st) {
 	std::string buff = "";
 	for (Rank rank = LAST_RANK; rank >= 0; rank--) {		
@@ -126,16 +171,16 @@ std::string pretty_state(State *st) {
 	}
 	buff += "\n";
 
-	Move move_buff[500];
+	Move *last_move = sorted_moves(st);
 
-	Move* last_move = generate_pseudo_legal(st, move_buff);
-
-	Move* ptr = move_buff;
-
-	buff += "moves : ";
+	Move* ptr = sorted_move_buff;
 
 	while (ptr < last_move) {
-		buff += uci_of_move(*ptr++) + " ";
+		if((ptr-sorted_move_buff) % 6 == 0) buff+="\n";
+		BSPRINTF(ibuff, "%2d. ", (int)(ptr-sorted_move_buff+1))
+		BSPRINTF(mbuff, "%-12s ", move_to_san(st, *ptr++).c_str())
+		buff += ibuff;
+		buff += mbuff;		
 	}
 	buff += "\n";
 

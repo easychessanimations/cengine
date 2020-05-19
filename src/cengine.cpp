@@ -29,7 +29,7 @@ extern "C" {
         /*std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[WHITE]);    
         std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[BLACK]);*/
 
-        //std::cout << pretty_state(&st) << std::endl;
+        std::cout << pretty_state(&st) << std::endl;
 
         /*BSPRINTF(sbuff, "buff %10s", "test");
 
@@ -41,7 +41,7 @@ extern "C" {
             std::cout << uci_of_square(tsq) << std::endl;
         }*/
 
-        perft(&lg, 5);
+        //perft(&lg, 5);
 
         /*Bitboard bb = rook_mobility(SQUARE_A1, bitboard_of(SQUARE_A2), bitboard_of(SQUARE_B7), true, true);
         std::cout << pretty_bitboard(ROOK_MAGIC_ATTACK[SQUARE_A1]);*/
@@ -59,15 +59,56 @@ extern "C" {
         std::cout << "info string engine initialized\n" << std::endl;
     }
 
+    State *curr;
+
+    void print_state(){
+        std::cout << pretty_state(curr);
+    }
+
     void execute_uci_command(char* command_cstr) {
         std::string command = command_cstr;
+
+        std::cout << std::endl;
 
         if (command == "x" || command == "exit" || command == "q" || command == "quit") {
             std::cout << command << " command recognized but not supported in this mode" << std::endl;
         } else {
-            std::cout << "received command " << command << std::endl;
+            //std::cout << "received command " << command << std::endl;
+
+            curr=&lg.states[lg.state_ptr];
+
             if(command == "p"){
-                perft(&lg, 2);
+                perft(&lg, 5);
+                return;
+            }
+
+            ToIntResult ti = to_int(command.c_str());
+
+            if(ti.ok){                
+                Move* last_move = sorted_moves(curr);                
+                if((ti.value >= 0)&&(ti.value < (last_move-sorted_move_buff))){
+                    push_state(&lg);
+                    curr=&lg.states[lg.state_ptr];
+                    make_move(curr, sorted_move_buff[ti.value]);
+                    print_state();
+                }
+                return;
+            }
+
+            if(command == "d"){                                
+                if(lg.state_ptr>0){                    
+                    lg.state_ptr--;
+                    curr=&lg.states[lg.state_ptr];
+                    print_state();
+                }
+                return;
+            }
+
+            if(command == "r"){   
+                lg.state_ptr=0;
+                curr=&lg.states[lg.state_ptr];
+                print_state();
+                return;
             }
         }
     }
@@ -93,7 +134,7 @@ int main() {
     init();
     
 #ifndef WASM
-    //uci_loop();
+    uci_loop();
 #endif
 
     return 0;

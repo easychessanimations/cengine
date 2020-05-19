@@ -14,4 +14,28 @@
 
 #endif
 
+struct ToIntResult{
+	bool ok;
+	int value;
+};
+
+inline ToIntResult to_int(char const *s){
+     if ( s == NULL || *s == '\0' ) return ToIntResult{false, 0};
+
+     bool negate = (s[0] == '-');
+     if ( *s == '+' || *s == '-' ) ++s;
+
+     if ( *s == '\0') return ToIntResult{false, 0};
+
+     int result = 0;
+
+     while(*s){
+          if ( *s >= '0' && *s <= '9' ){
+              result = result * 10  - (*s - '0');
+          } else return ToIntResult{false, 0};
+          ++s;
+     }
+     return ToIntResult{true, negate ? result : -result};
+}
+
 #endif

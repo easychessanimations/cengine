@@ -23,6 +23,11 @@ extern State state_from_fen(std::string fen);
 
 extern Piece fen_symbol_to_piece(std::string fen_symbol);
 
+const int MAX_MOVES = 500;
+
+extern Move sorted_move_buff[MAX_MOVES];
+extern Move* sorted_moves(State *st);
+
 extern std::string pretty_state(State *st);
 
 extern Move* generate_pseudo_legal(State *st, Move* move_buff);
@@ -35,6 +40,8 @@ struct LinearGame {
 	State states[MAX_STATES];
 	int state_ptr;
 };
+
+extern void push_state(LinearGame *lg);
 
 extern void perft(LinearGame* lg, int depth);
 
