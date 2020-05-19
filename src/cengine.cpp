@@ -107,6 +107,11 @@ extern "C" {
                 return;
             }
 
+            if(command == "i"){
+                print_state();
+                return;
+            }
+
             std::string tokens[20];
             int num_tokens = split(command, " ", tokens);
 
