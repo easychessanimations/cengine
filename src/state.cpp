@@ -16,21 +16,6 @@ std::string to_lower(std::string data){
 	return data;
 }
 
-int split(std::string str, std::string delim, std::string *buff) {
-	int index = int(str.find(delim));
-	int cnt = 0;
-	if (index < 0) {
-		buff[cnt] = str;
-		return cnt;
-	}
-	while (index >= 0) {
-		buff[cnt++] = str.substr(0, index);		
-		str = str.substr(index + delim.length());
-		index = int(str.find(delim));
-	}
-	return cnt;
-}
-
 Piece fen_symbol_to_piece(std::string fen_symbol) {
 	for (Piece p = 0; p < PIECE_ARRAY_SIZE; p++) {
 		if(fen_symbol_of(p) == fen_symbol){

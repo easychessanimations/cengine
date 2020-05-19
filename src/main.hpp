@@ -14,6 +14,8 @@
 
 #endif
 
+#include <iostream>
+
 struct ToIntResult{
 	bool ok;
 	int value;
@@ -36,6 +38,24 @@ inline ToIntResult to_int(char const *s){
           ++s;
      }
      return ToIntResult{true, negate ? result : -result};
+}
+
+inline int split(std::string str, std::string delim, std::string *buff) {
+	int index = int(str.find(delim));
+	int cnt = 0;
+	if (index < 0) {
+		buff[cnt] = str;
+		return 1;
+	}
+	while (index >= 0) {
+		buff[cnt++] = str.substr(0, index);				
+		str = str.substr(index + delim.length());		
+		index = int(str.find(delim));
+		if(index < 0){
+			buff[cnt++] = str;
+		}
+	}
+	return cnt + 1;
 }
 
 #endif

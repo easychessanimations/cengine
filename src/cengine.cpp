@@ -77,11 +77,6 @@ extern "C" {
 
             curr=&lg.states[lg.state_ptr];
 
-            if(command == "p"){
-                perft(&lg, 5);
-                return;
-            }
-
             ToIntResult ti = to_int(command.c_str());
 
             if(ti.ok){                
@@ -109,6 +104,27 @@ extern "C" {
                 lg.state_ptr=0;
                 curr=&lg.states[lg.state_ptr];
                 print_state();
+                return;
+            }
+
+            std::string tokens[20];
+            int num_tokens = split(command, " ", tokens);
+
+            command = tokens[0];
+
+            if(command == "p"){
+                int depth = 5;
+                if(num_tokens > 1){                    
+                    ti = to_int(tokens[1].c_str());
+                    if(ti.ok){
+                        depth = ti.value;
+                    }
+                }
+                if(depth <= 0) depth = 1;
+                if(depth > 6) depth = 6;
+                std::cout << "doing perft " << depth << std::endl << std::endl;
+                perft(&lg, depth);
+                std::cout << std::endl;
                 return;
             }
         }
