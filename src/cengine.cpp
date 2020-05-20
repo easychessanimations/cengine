@@ -162,8 +162,12 @@ extern "C" {
                         depth = ti.value;
                     }
                 }
+#ifndef WASM
                 std::thread search_th(search, &lg, depth);
                 search_th.detach();
+#else
+                search(&lg, depth);
+#endif
             }
 
             if(command=="s"){

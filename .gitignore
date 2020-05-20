@@ -9,6 +9,7 @@ x64/
 !/srcweb/index.js
 !/srcweb/preamble.js
 !/gen.js
+!/build.js
 
 #cengine.vcxproj
 #cengine.vcxproj.*
