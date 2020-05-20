@@ -90,24 +90,28 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 	Move *ptr;
 
 	Bitboard king_bb_them = curr->by_figure[KING] & curr->by_color[1-curr->turn];
-	Square king_sq = pop_square(&king_bb_them);
-	Bitboard king_attack = KING_ATTACK[king_sq]	;
+	Square king_sq_them = pop_square(&king_bb_them);	
+	Bitboard king_attack_them = KING_ATTACK[king_sq_them];
 
 	for(ptr = legal_moves; ptr < last_legal; ptr++){
 		Move move = *ptr;
 
+		Square from_sq = from_sq_of(move);
 		Square to_sq = to_sq_of(move);
 
-		Bitboard to_bb = bitboard_of(to_sq);
+		Piece from_p = piece_at_square(curr, from_sq);
+		Piece to_p = piece_at_square(curr, to_sq);
+		
+		Bitboard mob = mobility_for_piece_at_square(curr, from_p, to_sq, true, true);
 
-		Score attack = to_bb & king_attack ? 1 : 0;
+		Score attack = pop_cnt(king_attack_them & mob);
 
-		if(to_sq == king_sq) attack += 3;
+		if(bitboard_of(king_sq_them) & mob) attack += 3;
 
 		*msptr++ = MoveSortEntry{
 			move,
 			pv_entry.ok && ( move == pv_entry.move ),
-			piece_at_square(curr, to_sq),
+			to_p,
 			attack,
 		};
 	}
@@ -130,11 +134,11 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Depth max_depth = abi.max_depth;
 
-		if((msptr - sort_legal_moves)>4){
+		if((msptr - sort_legal_moves)>8){
 			max_depth--;
 		}
 
-		if((msptr - sort_legal_moves)>8){
+		if((msptr - sort_legal_moves)>16){
 			max_depth--;
 		}
 

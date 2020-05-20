@@ -77,4 +77,6 @@ extern bool kings_adjacent(State *st);
 
 extern Piece piece_at_square(State *st, Square sq);
 
+extern Bitboard mobility_for_piece_at_square(State *st, Piece p, Square sq, bool violent, bool quiet);
+
 #endif
