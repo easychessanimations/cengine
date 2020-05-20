@@ -187,12 +187,6 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 bool mate_found;
 
 void search_inner(LinearGame *lg, Depth depth){
-	std::cout << "info string search to depth " << (int)depth << std::endl << std::endl;
-
-	nodes = 0;
-
-	begin = std::chrono::steady_clock::now();	
-
 	mate_found = false;
 
 	Score last_score = 0;
@@ -239,25 +233,31 @@ void search_inner(LinearGame *lg, Depth depth){
 		int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() + 1;
 
 		int nps = (int)(nodes / ms)*1000;
-		
-		std::cout << "info depth " << (int)iter_depth << " time " << ms << " ";
-		std::cout << "nodes " << nbuff << " nps " << nps << " score " << (int)score << " pv " << get_pv(lg, iter_depth) << std::endl;
+
+		if(iter_depth == depth){
+			std::cout << "info depth " << (int)iter_depth << " time " << ms << " ";
+			std::cout << "nodes " << nbuff << " nps " << nps << " score " << (int)score << " pv " << get_pv(lg, iter_depth) << std::endl;	
+		}
 
 		if((score < -9000) || (score > 9000)){
 			mate_found = true;
 		}
 	}	
-
-	PvEntry root_entry = get_pv_entry(&lg->states[lg->state_ptr]);
-
-	std::cout << "bestmove " << uci_of_move(root_entry.move) << std::endl;
 }
 
 void search(LinearGame *lg, Depth depth){
+	nodes = 0;
+
+	begin = std::chrono::steady_clock::now();	
+
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
 		search_inner(lg, iter_depth);
 		if(mate_found){
 			return;
 		}
 	}
+
+	PvEntry root_entry = get_pv_entry(&lg->states[lg->state_ptr]);
+
+	std::cout << "bestmove " << uci_of_move(root_entry.move) << std::endl;
 }
