@@ -298,6 +298,18 @@ void make_move(State* st, Move move) {
 	Piece to_p = piece_at_square(st, to_sq);
 	remove_piece_from_square(st, from_sq);
 	put_piece_at_square(st, from_p, to_sq);
+	if(st->atomic){
+		if(to_p != NO_PIECE){
+			remove_piece_from_square(st, to_sq);
+			Bitboard exp_bb = KING_ATTACK[to_sq];
+			while(exp_bb){
+				Square exp_sq = pop_square(&exp_bb);
+				if(figure_of(piece_at_square(st, exp_sq)) != PAWN){
+					remove_piece_from_square(st, exp_sq);
+				}
+			}
+		}
+	}
 	set_turn(st, 1 - st->turn);
 }
 
@@ -366,6 +378,12 @@ Figure least_attacker_on_square_of_color(State *st, Square sq, Color col){
 }
 
 bool is_in_check_color(State *st, Color col){
+	if(st->atomic){
+		if(kings_adjacent(st)){
+			return false;
+		}
+	}
+
 	Bitboard king_bb = st->by_color[col] & st->by_figure[KING];
 
 	if(!king_bb){
@@ -374,7 +392,16 @@ bool is_in_check_color(State *st, Color col){
 
 	Square king_sq = pop_square(&king_bb);
 
-	return least_attacker_on_square_of_color(st, king_sq, 1-col) != NO_FIGURE;
+	if(st->atomic){
+		Bitboard king_them_bb = st->by_color[1-col] & st->by_figure[KING];
+		if(!king_them_bb){
+			return false;
+		}
+	}
+
+	Figure least_attacker = least_attacker_on_square_of_color(st, king_sq, 1-col);
+
+	return least_attacker != NO_FIGURE;
 }
 
 bool is_in_check(State *st){
@@ -417,10 +444,20 @@ Score eval_state(State *st){
 		mat += dir * 500 * pop_cnt(rooks);
 
 		Bitboard queens = st->by_figure[QUEEN] & st->by_color[col];
-		mat += dir * 300 * pop_cnt(queens);
+		mat += dir * 900 * pop_cnt(queens);
 	}
 
 	mat += mobility_and_attack(st, 10, 25);
 
 	return st->turn ? mat : -mat;
+}
+
+bool kings_adjacent(State *st){
+	Bitboard wk_bb = st->by_figure[KING] & st->by_color[WHITE];	
+	if(!wk_bb) return false;
+	Bitboard bk_bb = st->by_figure[KING] & st->by_color[WHITE];
+	if(!bk_bb) return false;
+	Square wk_sq = pop_square(&wk_bb);
+	Bitboard wk_attack = KING_ATTACK[wk_sq];
+	return wk_attack & bk_bb;
 }

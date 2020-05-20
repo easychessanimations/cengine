@@ -50,6 +50,15 @@ void set_pv_entry(State *st, Move move, Depth depth){
 	};
 }
 
+int comp_sort_moves(const void *vm1, const void *vm2){
+	MoveSortEntry m1 = *((MoveSortEntry*)vm1);
+	MoveSortEntry m2 = *((MoveSortEntry*)vm2);
+	if(m1.is_pv && (!m2.is_pv)) return -1;
+	if((!m1.is_pv) && m2.is_pv) return 1;
+	if(m1.capture > m2.capture) return -1;
+	return m1.attack > m2.attack ? -1 : 1;
+}
+
 Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 	State *curr = &lg->states[lg->state_ptr];
 
@@ -72,37 +81,61 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 		return 0;
 	}
 
-	Move sorted_legal[MAX_MOVES];
-
 	PvEntry pv_entry = get_pv_entry(curr);
 
-	Move *ptr = legal_moves;
+	MoveSortEntry sort_legal_moves[MAX_MOVES];
 
-	if(pv_entry.ok){
-		sorted_legal[0] = pv_entry.move;
-		Move *sptr = sorted_legal + 1;
-		for(Move *cptr = legal_moves; cptr < last_legal; cptr++){
-			if(*cptr != pv_entry.move){
-				*sptr++ = *cptr;
-			}
-		}
+	MoveSortEntry *msptr = sort_legal_moves;
 
-		ptr = sorted_legal;
-		last_legal = sptr;
+	Move *ptr;
+
+	Bitboard king_bb_them = curr->by_figure[KING] & curr->by_color[1-curr->turn];
+	Square king_sq = pop_square(&king_bb_them);
+	Bitboard king_attack = KING_ATTACK[king_sq]	;
+
+	for(ptr = legal_moves; ptr < last_legal; ptr++){
+		Move move = *ptr;
+
+		Square to_sq = to_sq_of(move);
+
+		Bitboard to_bb = bitboard_of(to_sq);
+
+		Score attack = to_bb & king_attack ? 1 : 0;
+
+		if(to_sq == king_sq) attack += 3;
+
+		*msptr++ = MoveSortEntry{
+			move,
+			pv_entry.ok && ( move == pv_entry.move ),
+			piece_at_square(curr, to_sq),
+			attack,
+		};
 	}
+
+	MoveSortEntry *last_sorted_legal = msptr;
+
+	qsort(sort_legal_moves, last_sorted_legal - sort_legal_moves, sizeof(MoveSortEntry), comp_sort_moves);
 
 	Score alpha = abi.alpha;
 
-	while(ptr < last_legal){
-		Move move = *ptr++;
+	msptr = sort_legal_moves;
+
+	while(msptr < last_sorted_legal){
+		MoveSortEntry move_sort_entry = *msptr++;
+
+		Move move = move_sort_entry.move;
 
 		push_state(lg);
 		make_move(&lg->states[lg->state_ptr], move); 
 
 		Depth max_depth = abi.max_depth;
 
-		if(pv_entry.ok && ((ptr - sorted_legal) > 1 )){
-			max_depth = max_depth - 1;
+		if((msptr - sort_legal_moves)>4){
+			max_depth--;
+		}
+
+		if((msptr - sort_legal_moves)>8){
+			max_depth--;
 		}
 
 		Score score = -alpha_beta_rec(lg, AlphaBetaInfo{
@@ -147,18 +180,20 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 	return buff;
 }
 
-void search(LinearGame *lg, Depth depth){
+bool mate_found;
+
+void search_inner(LinearGame *lg, Depth depth){
 	std::cout << "info string search to depth " << (int)depth << std::endl << std::endl;
 
 	nodes = 0;
 
 	begin = std::chrono::steady_clock::now();	
 
-	bool ok = true;
+	mate_found = false;
 
 	Score last_score = 0;
 
-	for(Depth iter_depth = 1; (iter_depth <= depth) && ok; iter_depth++){		
+	for(Depth iter_depth = 1; (iter_depth <= depth) && (!mate_found); iter_depth++){		
 		Score window_low = INFINITE_SCORE;
 		Score window_high = INFINITE_SCORE;
 
@@ -205,11 +240,20 @@ void search(LinearGame *lg, Depth depth){
 		std::cout << "nodes " << nbuff << " nps " << nps << " score " << (int)score << " pv " << get_pv(lg, iter_depth) << std::endl;
 
 		if((score < -9000) || (score > 9000)){
-			ok = false;
+			mate_found = true;
 		}
 	}	
 
 	PvEntry root_entry = get_pv_entry(&lg->states[lg->state_ptr]);
 
 	std::cout << "bestmove " << uci_of_move(root_entry.move) << std::endl;
+}
+
+void search(LinearGame *lg, Depth depth){
+	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
+		search_inner(lg, iter_depth);
+		if(mate_found){
+			return;
+		}
+	}
 }

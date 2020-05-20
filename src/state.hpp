@@ -18,6 +18,7 @@ struct State {
 	Bitboard by_color[2];
 	Bitboard by_figure[FIGURE_ARRAY_SIZE];
 	Magic hash_key;
+	bool atomic;
 };
 
 extern State state_from_fen(std::string fen);
@@ -71,5 +72,9 @@ extern Score eval_state(State *st);
 extern void set_turn(State *st, Color col);
 
 extern Score mobility_and_attack(State *st, Score mobility_weight, Score attack_weight);
+
+extern bool kings_adjacent(State *st);
+
+extern Piece piece_at_square(State *st, Square sq);
 
 #endif

@@ -120,6 +120,7 @@ extern "C" {
 
             if(command == "r"){   
                 lg.state_ptr=0;
+                lg.states[lg.state_ptr]=state_from_fen("");
                 curr=&lg.states[lg.state_ptr];
                 print_state();
                 return;
@@ -152,7 +153,7 @@ extern "C" {
             }
 
             if(command=="g"){
-                int depth = 10;
+                int depth = 12;
                 if(num_tokens > 1){                    
                     ti = to_int(tokens[1].c_str());
                     if(ti.ok){
@@ -167,7 +168,7 @@ extern "C" {
             std::string set_fen = "";
 
             if(command == "u"){
-                puzzle_ptr += gen_magic() & 0x0f;
+                puzzle_ptr += gen_magic() & 0x0f + 3;
                 if(puzzle_ptr > 460) puzzle_ptr = 0;
 
                 Puzzle pu = PUZZLES[puzzle_ptr];
@@ -196,6 +197,11 @@ extern "C" {
 
             if(puzzle_solution != ""){
                 std::cout << std::endl << puzzle_solution << std::endl << std::endl;
+            }
+
+            if(command == "a"){
+                lg.states[lg.state_ptr].atomic = !lg.states[lg.state_ptr].atomic;
+                std::cout << (lg.states[lg.state_ptr].atomic ? "atomic on" : "atomic off") << std::endl << std::endl;
             }
         }
     }

@@ -21,6 +21,13 @@ struct PvEntry{
 	bool ok;
 };
 
+struct MoveSortEntry{
+	Move move;
+	bool is_pv;
+	Score capture;
+	Score attack;
+};
+
 extern void search(LinearGame *lg, Depth depth);
 
 extern void set_pv_entry(State *st, Move move, Depth depth);
