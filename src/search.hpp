@@ -32,4 +32,6 @@ extern void search(LinearGame *lg, Depth depth);
 
 extern void set_pv_entry(State *st, Move move, Depth depth);
 
+extern bool search_stopped;
+
 #endif

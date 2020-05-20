@@ -21,6 +21,15 @@ const int PV_TABLE_KEY_SIZE_IN_BITS = 18;
 const Magic PV_TABLE_SIZE = (1<<PV_TABLE_KEY_SIZE_IN_BITS);
 const Magic PV_TABLE_MASK = PV_TABLE_SIZE - 1;
 
+bool search_stopped;
+
+Move root_move;
+bool has_root_move;
+Move finished_root_move;
+bool has_finished_root_move;
+Move finished_ponder_move;
+bool has_finished_ponder_move;
+
 PvEntry pv_table[PV_TABLE_SIZE];
 
 PvEntry get_pv_entry(State *st){
@@ -60,6 +69,8 @@ int comp_sort_moves(const void *vm1, const void *vm2){
 }
 
 Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
+	if(search_stopped) return 0;
+
 	State *curr = &lg->states[lg->state_ptr];
 
 	if(abi.current_depth >= abi.max_depth){
@@ -153,7 +164,11 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		if(score > alpha){
 			alpha = score;
-			set_pv_entry(curr, move, abi.current_depth);			
+			set_pv_entry(curr, move, abi.current_depth);						
+			if(abi.current_depth == 0){
+				root_move = move;
+				has_root_move = true;
+			}
 		}
 
 		if(score >= abi.beta){
@@ -171,8 +186,17 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 	bool ok = true;
 	State st = lg->states[lg->state_ptr];	
 	std::string buff = "";
+	bool root = true;
 	do{
-		PvEntry entry = get_pv_entry(&st);
+		PvEntry entry = get_pv_entry(&st);		
+		if(root && (!has_root_move)){
+			break;
+		}
+		if(root){
+			entry.ok = true;
+			entry.move = root_move;
+			root = false;
+		}		
 		if(entry.ok){
 			buff += uci_of_move(entry.move) + " ";						
 			make_move(&st, entry.move);
@@ -213,7 +237,11 @@ void search_inner(LinearGame *lg, Depth depth){
 				beta,
 				0,
 				iter_depth
-			});			
+			});		
+
+			if(search_stopped){
+				return;
+			}
 
 			if(score == alpha){
 				window_low *= 2;
@@ -237,9 +265,23 @@ void search_inner(LinearGame *lg, Depth depth){
 		if(iter_depth == depth){
 			std::cout << "info depth " << (int)iter_depth << " time " << ms << " ";
 			std::cout << "nodes " << nbuff << " nps " << nps << " score " << (int)score << " pv " << get_pv(lg, iter_depth) << std::endl;	
+
+			has_finished_ponder_move = false;
+
+			if(has_root_move){
+				has_finished_root_move = true;
+				finished_root_move = root_move;
+				State st = lg->states[lg->state_ptr];
+				make_move(&st, finished_root_move);
+				PvEntry entry = get_pv_entry(&st);
+				if(entry.ok){
+					has_finished_ponder_move = true;
+					finished_ponder_move = entry.move;
+				}
+			}
 		}
 
-		if((score < -9000) || (score > 9000)){
+		if((score < -WIN_SCORE) || (score > WIN_SCORE)){
 			mate_found = true;
 		}
 	}	
@@ -250,14 +292,27 @@ void search(LinearGame *lg, Depth depth){
 
 	begin = std::chrono::steady_clock::now();	
 
+	has_root_move = false;
+	has_finished_root_move = false;
+	has_finished_ponder_move = false;
+
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
 		search_inner(lg, iter_depth);
+		if(search_stopped) break;
 		if(mate_found){
 			return;
 		}
 	}
 
-	PvEntry root_entry = get_pv_entry(&lg->states[lg->state_ptr]);
-
-	std::cout << "bestmove " << uci_of_move(root_entry.move) << std::endl;
+	if(has_finished_root_move){
+		std::cout << "bestmove " << uci_of_move(finished_root_move);	
+		
+		if(has_finished_ponder_move){
+			std::cout << " ponder " << uci_of_move(finished_ponder_move) << std::endl;
+		}else{
+			std::cout << std::endl;
+		}
+	}else{
+		std::cout << "bestmove (none) " << std::endl;	
+	}	
 }

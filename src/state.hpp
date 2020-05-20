@@ -66,6 +66,7 @@ typedef int8_t Depth;
 
 const Score INFINITE_SCORE = 20000;
 const Score MATE_SCORE = 10000;
+const Score WIN_SCORE = 9000;
 
 extern Score eval_state(State *st);
 

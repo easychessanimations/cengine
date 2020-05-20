@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <thread>
 
 #include "main.hpp"
 #include "piece.hpp"
@@ -153,6 +154,7 @@ extern "C" {
             }
 
             if(command=="g"){
+                search_stopped = false;
                 int depth = 12;
                 if(num_tokens > 1){                    
                     ti = to_int(tokens[1].c_str());
@@ -160,7 +162,12 @@ extern "C" {
                         depth = ti.value;
                     }
                 }
-                search(&lg, depth);
+                std::thread search_th(search, &lg, depth);
+                search_th.detach();
+            }
+
+            if(command=="s"){
+                search_stopped = true;
             }
 
             std::string puzzle_solution = "";
