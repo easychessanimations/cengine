@@ -156,13 +156,42 @@ void search(LinearGame *lg, Depth depth){
 
 	bool ok = true;
 
+	Score last_score = 0;
+
 	for(Depth iter_depth = 1; (iter_depth <= depth) && ok; iter_depth++){		
-		Score score = alpha_beta_rec(lg, AlphaBetaInfo{
-			-INFINITE_SCORE,
-			INFINITE_SCORE,
-			0,
-			iter_depth
-		});
+		Score window_low = INFINITE_SCORE;
+		Score window_high = INFINITE_SCORE;
+
+		if(iter_depth > 4){
+			window_low = 50;
+			window_high = 50;
+		}
+
+		bool succ = false;		
+
+		Score score;
+
+		while(!succ){
+			Score alpha = last_score - window_low;
+			Score beta = last_score + window_high;
+
+			score = alpha_beta_rec(lg, AlphaBetaInfo{
+				alpha,
+				beta,
+				0,
+				iter_depth
+			});			
+
+			if(score == alpha){
+				window_low *= 2;
+			}else if(score == beta){
+				window_high *= 2;
+			}else{
+				succ = true;
+			}
+		}
+
+		last_score = score;
 
 		end = std::chrono::steady_clock::now();
 
