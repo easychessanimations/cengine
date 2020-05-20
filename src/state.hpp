@@ -17,6 +17,7 @@ struct State {
 	Color turn;
 	Bitboard by_color[2];
 	Bitboard by_figure[FIGURE_ARRAY_SIZE];
+	Magic hash_key;
 };
 
 extern State state_from_fen(std::string fen);
@@ -66,5 +67,7 @@ const Score INFINITE_SCORE = 20000;
 const Score MATE_SCORE = 10000;
 
 extern Score eval_state(State *st);
+
+extern void set_turn(State *st, Color col);
 
 #endif

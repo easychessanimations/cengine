@@ -146,7 +146,7 @@ extern "C" {
             }
 
             if(command=="g"){
-                int depth = 5;
+                int depth = 10;
                 if(num_tokens > 1){                    
                     ti = to_int(tokens[1].c_str());
                     if(ti.ok){
@@ -154,6 +154,19 @@ extern "C" {
                     }
                 }
                 search(&lg, depth);
+            }
+
+            if(command == "f"){
+                lg.state_ptr = 0;
+                std::string fen = "";
+                for(int i = 1; i < num_tokens; i++){
+                    fen += tokens[i];
+                    if(i < (num_tokens - 1)){
+                        fen += " ";
+                    }
+                }
+                lg.states[0] = state_from_fen(fen);
+                print_state();
             }
         }
     }

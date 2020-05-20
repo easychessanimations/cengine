@@ -6,6 +6,7 @@
 
 #include "bitboard.hpp"
 #include "square.hpp"
+#include "piece.hpp"
 
 typedef uint32_t Move;
 
@@ -104,5 +105,8 @@ extern Bitboard rook_mobility(Square sq, Bitboard occup_us, Bitboard occup_them,
 extern Bitboard queen_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
 extern Bitboard knight_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
 extern Bitboard king_mobility(Square sq, Bitboard occup_us, Bitboard occup_them, bool violent, bool quiet);
+
+extern Magic COLOR_FIGURE_KEYS[2][BOARD_AREA][FIGURE_ARRAY_SIZE];
+extern Magic TURN_KEYS[2];
 
 #endif

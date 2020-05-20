@@ -240,6 +240,20 @@ void init_pawn_infos() {
 	}	
 }
 
+Magic COLOR_FIGURE_KEYS[2][BOARD_AREA][FIGURE_ARRAY_SIZE];
+Magic TURN_KEYS[2];
+
+void init_keys(){
+	for(Color col = BLACK; col <= WHITE; col++){
+		TURN_KEYS[col] = gen_magic();
+		for(Square sq = 0; sq < BOARD_AREA; sq++){
+			for(Figure fig = 0; fig < FIGURE_ARRAY_SIZE; fig++){
+				COLOR_FIGURE_KEYS[col][sq][fig] = gen_magic();
+			}
+		}		
+	}
+}
+
 bool init_attacks() {
 	if(VERBOSE) std::cout << "info string initializing attacks" << std::endl;
 	for (Square sq = 0;sq < BOARD_AREA;sq++) {
@@ -268,6 +282,7 @@ bool init_attacks() {
 	if(VERBOSE) std::cout << "info string initializing pawn infos" << std::endl;
 	init_pawn_infos();
 	if(VERBOSE) std::cout << "info string initializing pawn infos done" << std::endl;
+	init_keys();
 	return true;
 }
 

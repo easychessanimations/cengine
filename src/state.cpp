@@ -34,9 +34,12 @@ void remove_piece_from_square(State *st, Square sq) {
 		return;
 	}
 	Bitboard bb = bitboard_of(sq);
-	st->by_color[color_of(p)] &= (~bb);
-	st->by_figure[figure_of(p)] &= (~bb);
+	Color col = color_of(p);
+	Figure fig = figure_of(p);
+	st->by_color[col] &= (~bb);
+	st->by_figure[fig] &= (~bb);
 	st->rep[sq] = NO_PIECE;
+	st->hash_key ^= (~COLOR_FIGURE_KEYS[col][sq][fig]);
 }
 
 void put_piece_at_square(State* st, Piece p, Square sq) {
@@ -45,9 +48,12 @@ void put_piece_at_square(State* st, Piece p, Square sq) {
 	}
 	remove_piece_from_square(st, sq);	
 	Bitboard bb = bitboard_of(sq);
-	st->by_color[color_of(p)] |= bb;
-	st->by_figure[figure_of(p)] |= bb;
+	Color col = color_of(p);
+	Figure fig = figure_of(p);
+	st->by_color[col] |= bb;
+	st->by_figure[fig] |= bb;
 	st->rep[sq] = p;
+	st->hash_key ^= COLOR_FIGURE_KEYS[col][sq][fig];
 }
 
 State state_from_fen(std::string fen) {
@@ -56,7 +62,7 @@ State state_from_fen(std::string fen) {
 	memset(&st, 0, sizeof(State));
 
 	if (fen == "") {
-		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";		
 	}
 
 	std::string parts[7];
@@ -73,7 +79,7 @@ State state_from_fen(std::string fen) {
 		Square sq = rank_file(rank, file);
 
 		if ((c >= "1") && (c <= "8")) {
-			for (int j = 0; j < (int)(c[0] - '1'); j++) {
+			for (int j = 0; j < (int)(c[0] - '0'); j++) {
 				put_piece_at_square(&st, NO_PIECE, sq);
 				file++;
 				Square sq = rank_file(rank, file);
@@ -87,7 +93,7 @@ State state_from_fen(std::string fen) {
 		}
 	}
 
-	st.turn = WHITE;
+	set_turn(&st, WHITE);
 
 	if (num_parts > 1) {
 		if (parts[1] == "b") {
@@ -257,6 +263,12 @@ Move* generate_pseudo_legal(State *st, Move* move_buff) {
 	return pseudo_legal_moves_for_turn(st, move_buff, true, true);
 }
 
+void set_turn(State *st, Color col){
+	st->hash_key ^= (~TURN_KEYS[st->turn]);
+	st->hash_key ^= TURN_KEYS[col];
+	st->turn = col;
+}
+
 void make_move(State* st, Move move) {
 	Square from_sq = from_sq_of(move);
 	Square to_sq = to_sq_of(move);
@@ -264,7 +276,7 @@ void make_move(State* st, Move move) {
 	Piece to_p = piece_at_square(st, to_sq);
 	remove_piece_from_square(st, from_sq);
 	put_piece_at_square(st, from_p, to_sq);
-	st->turn = 1 - st->turn;
+	set_turn(st, 1 - st->turn);
 }
 
 long long int nodes;
@@ -315,11 +327,7 @@ Figure least_attacker_on_square_of_color(State *st, Square sq, Color col){
 	PawnInfo pi = PAWN_INFOS[1-col][sq];
 	for(int i=0;i<pi.num_captures;i++){
 		Piece p = piece_at_square(st, to_sq_of(pi.captures[i]));
-		if(p!=NO_PIECE){
-			if(color_of(p) == col){
-				return PAWN;
-			}
-		}
+		if((figure_of(p)==PAWN) && (color_of(p) == col)) return PAWN;
 	}
 	for(Figure fig = KNIGHT; fig <= KING; fig++){
 		Bitboard mob = mobility_for_piece_at_square(st, color_figure(1-col, fig), sq, true, false);
