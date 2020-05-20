@@ -262,3 +262,29 @@ fs.readdir("src", (_,items)=>{
 
 	fs.writeFileSync(projPath, proj)
 });
+
+let puzzles = []
+let lastFen = null
+for(let line of fs.readFileSync("matein4.txt").toString().replace(/\r*/g, "").split("\n")){
+	if(line.match(/^[^ ]+ [bw]+/)){
+		lastFen = line;
+	}else if(lastFen){
+		puzzles.push([lastFen, line])
+		lastFen = null
+	}
+}
+
+fs.writeFileSync("src/matein4.cpp", `
+#include <string>
+struct Puzzle{
+	std::string fen;
+	std::string solution;
+};
+const Puzzle PUZZLES[${puzzles.length}]={
+${puzzles.map(puzzle=>{
+		return `Puzzle{
+	"${puzzle[0]}",
+	"${puzzle[1]}"
+}`
+	}).join(",\n")}};
+`)

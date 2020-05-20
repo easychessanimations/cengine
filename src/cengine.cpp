@@ -10,11 +10,17 @@
 #include "state.hpp"
 #include "search.hpp"
 
+#include "matein4.cpp"
+
 LinearGame lg;
+
+int puzzle_ptr;
 
 extern "C" {
 
     void init() {
+        puzzle_ptr = 5;
+
         init_bitboards();
         init_attacks();
 
@@ -156,17 +162,37 @@ extern "C" {
                 search(&lg, depth);
             }
 
+            std::string puzzle_solution = "";
+
+            std::string set_fen = "";
+
+            if(command == "u"){
+                Puzzle pu = PUZZLES[puzzle_ptr++];
+
+                puzzle_solution = pu.solution;
+
+                command = "f";
+
+                set_fen = pu.fen;
+            }
+
             if(command == "f"){
                 lg.state_ptr = 0;
-                std::string fen = "";
-                for(int i = 1; i < num_tokens; i++){
-                    fen += tokens[i];
-                    if(i < (num_tokens - 1)){
-                        fen += " ";
+                std::string fen = set_fen;
+                if(fen == ""){
+                    for(int i = 1; i < num_tokens; i++){
+                        fen += tokens[i];
+                        if(i < (num_tokens - 1)){
+                            fen += " ";
+                        }
                     }
-                }
+                }                
                 lg.states[0] = state_from_fen(fen);
                 print_state();
+            }
+
+            if(puzzle_solution != ""){
+                std::cout << std::endl << puzzle_solution << std::endl << std::endl;
             }
         }
     }

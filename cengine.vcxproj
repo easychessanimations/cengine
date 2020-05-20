@@ -22,6 +22,7 @@
 <ClCompile Include="src/attack.cpp" />
 <ClCompile Include="src/bitboard.cpp" />
 <ClCompile Include="src/cengine.cpp" />
+<ClCompile Include="src/matein4.cpp" />
 <ClCompile Include="src/piece.cpp" />
 <ClCompile Include="src/search.cpp" />
 <ClCompile Include="src/square.cpp" />
