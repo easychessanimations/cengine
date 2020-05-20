@@ -68,6 +68,8 @@ const Score INFINITE_SCORE = 20000;
 const Score MATE_SCORE = 10000;
 const Score WIN_SCORE = 9000;
 
+const Score RANDOM_BONUS = 15;
+
 extern Score eval_state(State *st);
 
 extern void set_turn(State *st, Color col);

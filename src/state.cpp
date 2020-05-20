@@ -449,6 +449,8 @@ Score eval_state(State *st){
 
 	mat += mobility_and_attack(st, 10, 25);
 
+	mat += RANDOM_BONUS - 2 * ( ( RANDOM_BONUS * (Score)(gen_magic() & 0xff) ) / 0xff );
+
 	return st->turn ? mat : -mat;
 }
 
