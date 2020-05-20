@@ -50,13 +50,16 @@ void set_pv_entry(State *st, Move move, Depth depth){
 			return;
 		}
 	}
-	Magic key = st->hash_key & PV_TABLE_MASK;
-	pv_table[key] = PvEntry{
-		depth,
-		move,
-		st->hash_key,
-		true,
-	};
+	Magic key = st->hash_key & PV_TABLE_MASK;	
+	PvEntry new_pv_entry = old_entry;
+	new_pv_entry.depth = depth;
+	new_pv_entry.key = st->hash_key;
+	new_pv_entry.ok = true;
+	for(int i = MAX_PV_MOVES-1; i > 0; i--){
+		new_pv_entry.moves[i] = new_pv_entry.moves[i-1];
+	}
+	new_pv_entry.moves[0] = move;
+	pv_table[key] = new_pv_entry;
 }
 
 int comp_sort_moves(const void *vm1, const void *vm2){
@@ -119,9 +122,20 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		if(bitboard_of(king_sq_them) & mob) attack += 3;
 
+		bool is_pv = false;
+
+		if(pv_entry.ok){
+			for(int i = 0; i < MAX_PV_MOVES; i++){
+				if(pv_entry.moves[i]==move){
+					is_pv=true;
+					break;
+				}
+			}
+		}
+
 		*msptr++ = MoveSortEntry{
 			move,
-			pv_entry.ok && ( move == pv_entry.move ),
+			is_pv,
 			to_p,
 			attack,
 		};
@@ -149,9 +163,9 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 			max_depth--;
 		}
 
-		if((msptr - sort_legal_moves)>16){
+		/*if((msptr - sort_legal_moves)>16){
 			max_depth--;
-		}
+		}*/
 
 		Score score = -alpha_beta_rec(lg, AlphaBetaInfo{
 			(Score)(-abi.beta),
@@ -194,12 +208,12 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 		}
 		if(root){
 			entry.ok = true;
-			entry.move = root_move;
+			entry.moves[0] = root_move;
 			root = false;
 		}		
 		if(entry.ok){
-			buff += uci_of_move(entry.move) + " ";						
-			make_move(&st, entry.move);
+			buff += uci_of_move(entry.moves[0]) + " ";						
+			make_move(&st, entry.moves[0]);
 		}else{
 			ok = false;
 		}
@@ -276,7 +290,7 @@ void search_inner(LinearGame *lg, Depth depth){
 				PvEntry entry = get_pv_entry(&st);
 				if(entry.ok){
 					has_finished_ponder_move = true;
-					finished_ponder_move = entry.move;
+					finished_ponder_move = entry.moves[0];
 				}
 			}
 		}

@@ -14,9 +14,11 @@ struct AlphaBetaInfo{
 	Depth max_depth;
 };
 
+const int MAX_PV_MOVES = 4;
+
 struct PvEntry{
 	Depth depth;
-	Move move;
+	Move moves[MAX_PV_MOVES];
 	Magic key;
 	bool ok;
 };
