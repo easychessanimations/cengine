@@ -167,7 +167,10 @@ extern "C" {
             std::string set_fen = "";
 
             if(command == "u"){
-                Puzzle pu = PUZZLES[puzzle_ptr++];
+                puzzle_ptr += gen_magic() & 0x0f;
+                if(puzzle_ptr > 460) puzzle_ptr = 0;
+
+                Puzzle pu = PUZZLES[puzzle_ptr];
 
                 puzzle_solution = pu.solution;
 

@@ -26,6 +26,7 @@ const Bitboard RANK_8_MIDDLE_BB = 0x7E00000000000000;
 const Bitboard FILE_A_MIDDLE_BB = 0x0001010101010100;
 const Bitboard FILE_H_MIDDLE_BB = 0x0080808080808000;
 const Bitboard MIDDLE_BB        = (~FILE_A_BB) & (~FILE_H_BB) & (~RANK_1_BB) & (~RANK_8_BB);
+const Bitboard CENTER_BB        = 0x0000001818000000;
 
 extern std::string pretty_bitboard(Bitboard bb);
 

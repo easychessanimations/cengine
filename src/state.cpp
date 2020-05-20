@@ -255,6 +255,28 @@ Move* pseudo_legal_moves_for_color(State *st, Move* move_buff, Color col, bool v
 	return ptr;
 }
 
+Score mobility_and_attack(State *st, Score mobility_weight, Score attack_weight) {
+	Score mob = 0;
+	Score att = 0;
+	for(Color col = BLACK; col <= WHITE; col++){
+		Score dir = col ? 1 : -1;
+		Bitboard us = st->by_color[col] & (~st->by_figure[PAWN]);		
+		Bitboard king_them = st->by_color[1-col] & st->by_figure[KING];
+		Bitboard king_sq_bb = king_them;
+		Square king_sq = pop_square(&king_sq_bb);
+		Bitboard king_attack_them = KING_ATTACK[king_sq];
+		while (us) {
+			Square sq = pop_square(&us);
+			Figure fig = figure_of(piece_at_square(st, sq));
+			Bitboard mob_bb = mobility_for_piece_at_square(st, color_figure(1-col, fig), sq, true, true);
+			mob += dir * pop_cnt(mob_bb) * mobility_weight;			
+			att += dir * pop_cnt(mob_bb && king_them) * attack_weight * 3;
+			att += dir * pop_cnt(mob_bb && king_attack_them) * attack_weight;
+		}
+	}	
+	return mob + att;
+}
+
 Move* pseudo_legal_moves_for_turn(State *st, Move* move_buff, bool violent, bool quiet) {
 	return pseudo_legal_moves_for_color(st, move_buff, st->turn, violent, quiet);
 }
@@ -375,19 +397,30 @@ Move* generate_legal(State *st, Move* move_buff){
 }
 
 Score eval_state(State *st){
-	Score mat = 0;	
+	Score mat = 0;
+
 	for(Color col = BLACK; col <= WHITE; col++){
 		Score dir = 2 * col - 1;
-		Bitboard knights = st->by_figure[PAWN] & st->by_color[col];
-		mat += dir * 100 * pop_cnt(knights);
-		Bitboard pawns = st->by_figure[KNIGHT] & st->by_color[col];
-		mat += dir * 300 * pop_cnt(pawns);
+
+		Bitboard pawns = st->by_figure[PAWN] & st->by_color[col];
+		mat += dir * 100 * pop_cnt(pawns);
+
+		mat += dir * 25 * pop_cnt(pawns & CENTER_BB);
+
+		Bitboard knights = st->by_figure[KNIGHT] & st->by_color[col];
+		mat += dir * 300 * pop_cnt(knights);		
+
 		Bitboard bishops = st->by_figure[BISHOP] & st->by_color[col];
 		mat += dir * 300 * pop_cnt(bishops);
+
 		Bitboard rooks = st->by_figure[ROOK] & st->by_color[col];
 		mat += dir * 500 * pop_cnt(rooks);
+
 		Bitboard queens = st->by_figure[QUEEN] & st->by_color[col];
 		mat += dir * 300 * pop_cnt(queens);
 	}
+
+	mat += mobility_and_attack(st, 10, 25);
+
 	return st->turn ? mat : -mat;
 }

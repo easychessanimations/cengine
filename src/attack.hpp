@@ -109,4 +109,6 @@ extern Bitboard king_mobility(Square sq, Bitboard occup_us, Bitboard occup_them,
 extern Magic COLOR_FIGURE_KEYS[2][BOARD_AREA][FIGURE_ARRAY_SIZE];
 extern Magic TURN_KEYS[2];
 
+extern Magic gen_magic();
+
 #endif

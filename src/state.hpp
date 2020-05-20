@@ -70,4 +70,6 @@ extern Score eval_state(State *st);
 
 extern void set_turn(State *st, Color col);
 
+extern Score mobility_and_attack(State *st, Score mobility_weight, Score attack_weight);
+
 #endif
