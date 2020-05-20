@@ -1,7 +1,12 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+
+#ifndef WASM
 #include <thread>
+#else
+#include <pthread.h>
+#endif
 
 #include "main.hpp"
 #include "piece.hpp"
@@ -16,6 +21,13 @@
 LinearGame lg;
 
 int puzzle_ptr;
+
+void *do_search(void *dummy){
+
+    std::cout << "doing search" << std::endl;
+
+    return NULL;
+}
 
 extern "C" {
 
@@ -166,7 +178,13 @@ extern "C" {
                 std::thread search_th(search, &lg, depth);
                 search_th.detach();
 #else
+#ifdef __EMSCRIPTEN_PTHREADS__
+                pthread_t t1;
+
+                pthread_create(&t1, NULL, &do_search, NULL);
+#else
                 search(&lg, depth);
+#endif
 #endif
             }
 

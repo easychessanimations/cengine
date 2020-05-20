@@ -4,3 +4,4 @@ copy srcweb\index.html site\index.html
 copy srcweb\index.js site\index.js
 type wasmbuild\cengine.js srcweb\preamble.js >site\cengine.js
 copy wasmbuild\cengine.wasm site
+copy wasmbuild\cengine.worker.js site
