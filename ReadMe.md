@@ -1,6 +1,6 @@
 # cengine
 
-Visual studio and Emscripten compilable chess engine.
+Visual Studio, GNU C++ and Emscripten compilable chess engine.
 
 # Building
 
@@ -8,7 +8,7 @@ Visual studio and Emscripten compilable chess engine.
 
 ## IDE
 
-Open the project `cengine.vcxproj` in Visual Studio and in `Build` menu click on `Build Solution`.
+Open the project `cengine.vcxproj` in Visual Studio and in the `Build` menu click on `Build Solution`.
 
 ## Command line
 
