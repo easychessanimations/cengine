@@ -104,6 +104,8 @@ inline Square rank_file(Rank rank, File file){
 	return rank * NUM_FILES + file;
 }
 
-extern std::string uci_of_square(Square sq);
+inline std::string uci_of_square(Square sq) {
+	return FILE_NAMES[file_of(sq)] + RANK_NAMES[rank_of(sq)];
+}
 
 #endif

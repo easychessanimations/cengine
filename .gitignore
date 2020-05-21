@@ -6,6 +6,8 @@ x64/
 *.html
 *.ico
 
+*.exe
+
 !/srcweb/index.html
 !/srcweb/index.js
 !/srcweb/preamble.js

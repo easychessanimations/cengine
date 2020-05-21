@@ -18,6 +18,10 @@
 
 #include "matein4.cpp"
 
+#ifdef GCCBUILD
+//#define __EMSCRIPTEN_PTHREADS__
+#endif
+
 LinearGame lg;
 
 Depth do_search_depth;
@@ -262,6 +266,10 @@ int main() {
     init();
     
 #ifndef WASM
+    uci_loop();
+#endif
+
+#ifdef GCCBUILD
     uci_loop();
 #endif
 

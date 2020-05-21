@@ -6,6 +6,10 @@
 #include <cctype>
 #include <string>
 
+#ifdef GCCBUILD
+#include <cstring>
+#endif
+
 #include "main.hpp"
 #include "state.hpp"
 #include "attack.hpp"
