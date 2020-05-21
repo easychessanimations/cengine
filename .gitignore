@@ -4,12 +4,14 @@ x64/
 *.wasm
 *.js
 *.html
+*.ico
 
 !/srcweb/index.html
 !/srcweb/index.js
 !/srcweb/preamble.js
 !/gen.js
 !/build.js
+!/srcweb/favicon.ico
 
 #cengine.vcxproj
 #cengine.vcxproj.*
