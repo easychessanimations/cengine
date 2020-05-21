@@ -19,16 +19,5 @@ function handleKeyUp(ev){
 function onLoad(){
 	console.log("document loaded")
 
-	worker = new Worker("cengine.js")
-
-	worker.onmessage = ev => {
-		console.log("worker sent", ev.data)
-	}
-
-	worker.postMessage({
-		kind: "welcome",
-		content: "hi, worker !",
-	})
-
 	document.getElementById("command").addEventListener("keyup", handleKeyUp)
 }
