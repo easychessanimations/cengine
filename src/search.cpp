@@ -13,9 +13,9 @@
 #include "search.hpp"
 
 #ifndef WASM
-const int PV_TABLE_KEY_SIZE_IN_BITS = 24;
+const int PV_TABLE_KEY_SIZE_IN_BITS = 22;
 #else
-const int PV_TABLE_KEY_SIZE_IN_BITS = 18;
+const int PV_TABLE_KEY_SIZE_IN_BITS = 22;
 #endif
 
 const Magic PV_TABLE_SIZE = (1<<PV_TABLE_KEY_SIZE_IN_BITS);

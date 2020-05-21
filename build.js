@@ -11,7 +11,7 @@ let optimizeFlag = process.argv[2] == "o" ? "-O2 " : ""
 fs.readdir("src", (_,items)=>{
 	let srcs = items.filter(item=>item.match(/\.cpp$|\.c$/)).map(item=>"src/"+item).join(" ")
 
-	let emcc = `emcc ${srcs} -s WASM=1 -s TOTAL_MEMORY=30MB -s ALLOW_MEMORY_GROWTH=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=2 -D WASM ${optimizeFlag}-o wasmbuild/cengine.html -s EXPORTED_FUNCTIONS="[${EXPORTED_FUNCTIONS.map(ef => "'_"+ef+"'").join(",")}]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['cwrap']"`
+	let emcc = `emcc ${srcs} -s WASM=1 -s TOTAL_MEMORY=200MB -s ALLOW_MEMORY_GROWTH=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=2 -D WASM ${optimizeFlag}-o wasmbuild/cengine.html -s EXPORTED_FUNCTIONS="[${EXPORTED_FUNCTIONS.map(ef => "'_"+ef+"'").join(",")}]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['cwrap']"`
 
 	const cmd = spawn('cmd', []);
 

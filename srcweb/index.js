@@ -96,8 +96,41 @@ function Logger(props){return new Logger_(props)}
 
 const logger = Logger()
 
+
+// define a new console
+let console=(function(oldCons){
+  return {
+      log: function(text){
+        logger.log(LogItem({msg: text, kind: "normal"}))
+        logger.renderAsTable()
+      },
+      info: function (text) {
+        logger.log(LogItem({msg: text, kind: "info"}))
+        logger.renderAsTable()
+      },
+      warn: function (text) {
+        logger.log(LogItem({msg: text, kind: "warn"}))
+        logger.renderAsTable()
+      },
+      error: function (text) {
+        logger.log(LogItem({msg: text, kind: "error"}))
+        logger.renderAsTable()
+      }
+  }
+}(window.console))
+
+// redefine the old console
+window.console = console
+
+Module={
+	print : function(t){		
+		console.log(t)		
+	}
+}
+
 function onLoad(){
 	console.log("document loaded")
+	console.log("")
 
 	Module.onRuntimeInitialized = function(){
 		sendCommand = function (){
@@ -112,34 +145,10 @@ function onLoad(){
 
 			ce.value = ""
 		}
-		
+
 		document.getElementById("command").addEventListener("keyup", handleKeyUp)
 
-		// define a new console
-		let console=(function(oldCons){
-		  return {
-		      log: function(text){
-		        logger.log(LogItem({msg: text, kind: "normal"}))
-		        logger.renderAsTable()
-		      },
-		      info: function (text) {
-		        logger.log(LogItem({msg: text, kind: "info"}))
-		        logger.renderAsTable()
-		      },
-		      warn: function (text) {
-		        logger.log(LogItem({msg: text, kind: "warn"}))
-		        logger.renderAsTable()
-		      },
-		      error: function (text) {
-		        logger.log(LogItem({msg: text, kind: "error"}))
-		        logger.renderAsTable()
-		      }
-		  }
-		}(window.console))
-
-		// redefine the old console
-		window.console = console
-
 		console.log("engine up and running")		
+		console.log("")
 	}
 }
