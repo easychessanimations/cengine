@@ -19,7 +19,7 @@
 #include "matein4.cpp"
 
 #ifdef GCCBUILD
-//#define __EMSCRIPTEN_PTHREADS__
+#define __EMSCRIPTEN_PTHREADS__
 #endif
 
 LinearGame lg;
