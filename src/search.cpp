@@ -159,11 +159,19 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Depth max_depth = abi.max_depth;
 
-		if((msptr - sort_legal_moves)>6){
+		if((msptr - sort_legal_moves)>3){
 			max_depth--;
 		}
 
-		if((msptr - sort_legal_moves)>12){
+		if((msptr - sort_legal_moves)>5){
+			max_depth--;
+		}
+
+		if((msptr - sort_legal_moves)>7){
+			max_depth--;
+		}
+
+		if((msptr - sort_legal_moves)>9){
 			max_depth--;
 		}
 
@@ -224,12 +232,14 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 
 bool mate_found;
 
+const Depth DOUBLE_ITERATION_LIMIT = 14;
+
 void search_inner(LinearGame *lg, Depth depth){
 	mate_found = false;
 
 	Score last_score = 0;
 
-	for(Depth iter_depth = 1; (iter_depth <= depth) && (!mate_found); iter_depth++){		
+	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){		
 		Score window_low = INFINITE_SCORE;
 		Score window_high = INFINITE_SCORE;
 
@@ -254,7 +264,7 @@ void search_inner(LinearGame *lg, Depth depth){
 			});		
 
 			if(search_stopped){
-				return;
+				break;
 			}
 
 			if(score == alpha){
@@ -268,6 +278,10 @@ void search_inner(LinearGame *lg, Depth depth){
 
 		last_score = score;
 
+		if((score < -WIN_SCORE) || (score > WIN_SCORE)){
+			mate_found = true;
+		}
+
 		end = std::chrono::steady_clock::now();
 
 		BSPRINTF(nbuff, "%lld", nodes);
@@ -276,7 +290,13 @@ void search_inner(LinearGame *lg, Depth depth){
 
 		int nps = (int)(nodes / ms)*1000;
 
-		if(iter_depth == depth){
+		bool print_pv = depth <= DOUBLE_ITERATION_LIMIT ? depth == iter_depth : iter_depth > DOUBLE_ITERATION_LIMIT;
+
+		if(search_stopped || mate_found){
+			print_pv = true;
+		}
+
+		if(print_pv){
 			std::cout << "info depth " << (int)iter_depth << " time " << ms << " ";
 			std::cout << "nodes " << nbuff << " nps " << nps << " score " << (int)score << " pv " << get_pv(lg, iter_depth) << std::endl;	
 
@@ -295,8 +315,8 @@ void search_inner(LinearGame *lg, Depth depth){
 			}
 		}
 
-		if((score < -WIN_SCORE) || (score > WIN_SCORE)){
-			mate_found = true;
+		if(search_stopped || mate_found){
+			break;
 		}
 	}	
 }
@@ -311,11 +331,13 @@ void search(LinearGame *lg, Depth depth){
 	has_finished_ponder_move = false;
 
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
-		search_inner(lg, iter_depth);
-		if(search_stopped) break;
-		if(mate_found){
-			return;
+		if(iter_depth <= DOUBLE_ITERATION_LIMIT){
+			search_inner(lg, iter_depth);
+		}else{
+			iter_depth = depth;
+			search_inner(lg, depth);
 		}
+		if(search_stopped || mate_found) break;
 	}
 
 	if(has_finished_root_move){

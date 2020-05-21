@@ -175,7 +175,7 @@ extern "C" {
 
             if(command=="g"){
                 search_stopped = false;
-                int depth = 12;
+                int depth = 20;
                 if(num_tokens > 1){                    
                     ti = to_int(tokens[1].c_str());
                     if(ti.ok){
@@ -207,7 +207,7 @@ extern "C" {
             std::string set_fen = "";
 
             if(command == "u"){
-                puzzle_ptr += ( gen_magic() & 0x0f ) + 3;
+                puzzle_ptr += ( gen_magic() & 0x3f ) + 3;
                 if(puzzle_ptr > 460) puzzle_ptr = 0;
 
                 Puzzle pu = PUZZLES[puzzle_ptr];
