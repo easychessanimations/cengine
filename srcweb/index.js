@@ -5,10 +5,7 @@ function sendCommand(){
 
 	let command = ce.value
 
-	worker.postMessage({
-		kind: "command",
-		content: command,
-	})
+	execute_uci_command(command)
 
 	ce.value = ""
 }

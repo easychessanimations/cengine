@@ -20,11 +20,15 @@
 
 LinearGame lg;
 
+Depth do_search_depth;
+
 int puzzle_ptr;
 
 void *do_search(void *dummy){
 
     std::cout << "doing search" << std::endl;
+
+    search(&lg, do_search_depth);
 
     return NULL;
 }
@@ -180,6 +184,8 @@ extern "C" {
 #else
 #ifdef __EMSCRIPTEN_PTHREADS__
                 pthread_t t1;
+
+                do_search_depth = depth;
 
                 pthread_create(&t1, NULL, &do_search, NULL);
 #else
