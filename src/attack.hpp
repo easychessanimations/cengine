@@ -14,6 +14,32 @@ const uint8_t SQUARE_STORAGE_SIZE_IN_BITS = 6;
 const Move SQUARE_MASK = (1 << SQUARE_STORAGE_SIZE_IN_BITS) - 1;
 const uint8_t TO_SQUARE_SHIFT = SQUARE_STORAGE_SIZE_IN_BITS;
 
+const uint8_t MOVE_PIECE_STORAGE_SIZE_IN_BITS = 5;
+const uint8_t MOVE_PROMOTION_PIECE_SHIFT = TO_SQUARE_SHIFT + SQUARE_STORAGE_SIZE_IN_BITS;
+const uint32_t MOVE_PROMOTION_PIECE_MASK = (1<<MOVE_PIECE_STORAGE_SIZE_IN_BITS) - 1;
+
+const uint8_t MOVE_TYPE_STORAGE_SIZE_IN_BITS = 3;
+const uint32_t MOVE_TYPE_MASK = (1<<MOVE_TYPE_STORAGE_SIZE_IN_BITS) - 1;
+const uint8_t MOVE_TYPE_SHIFT = 32 - MOVE_TYPE_STORAGE_SIZE_IN_BITS;
+
+const uint32_t PROMOTION_MOVE = 1;
+
+inline Move decorate_move_with_type(Move move, uint32_t move_type){
+	return move | (move_type << MOVE_TYPE_SHIFT);
+}
+
+inline uint32_t type_of_move(Move move){
+	return move >> MOVE_TYPE_SHIFT;
+}
+
+inline Move decorate_move_with_promotion_piece(Move move, Piece prom_piece){
+	return move | ((Move)prom_piece << MOVE_PROMOTION_PIECE_SHIFT);
+}
+
+inline uint32_t promotion_piece_of_move(Move move){
+	return (move >> MOVE_PROMOTION_PIECE_SHIFT)&MOVE_PROMOTION_PIECE_MASK;
+}
+
 inline Square from_sq_of(Move move) {
 	return move & SQUARE_MASK;
 }
@@ -80,7 +106,11 @@ inline Move move_ft(Square from_sq, Square to_sq) {
 }
 
 inline std::string uci_of_move(Move move) {
-	return uci_of_square(from_sq_of(move)) + uci_of_square(to_sq_of(move));
+	std::string base_uci = uci_of_square(from_sq_of(move)) + uci_of_square(to_sq_of(move));
+	if(type_of_move(move) == PROMOTION_MOVE){
+		return base_uci + uci_symbol_of(promotion_piece_of_move(move));
+	}
+	return base_uci;
 }
 
 struct PawnInfo {

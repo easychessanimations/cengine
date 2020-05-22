@@ -212,7 +212,11 @@ std::string move_to_san(State *st, Move move){
 			check = "#";
 		}
 	}
-	return letter + from_spec + takes + to_spec + check;
+	std::string prom = "";
+	if(type_of_move(move) == PROMOTION_MOVE){
+		prom = "=" + san_symbol_of(promotion_piece_of_move(move));
+	}
+	return letter + from_spec + takes + to_spec + check + prom;
 }
 
 State *sorted_state;
@@ -262,7 +266,7 @@ std::string report_fen(State *st){
 	if(st->castling_rights[1].can_castle) castle_fen+="Q";
 	if(st->castling_rights[2].can_castle) castle_fen+="k";
 	if(st->castling_rights[3].can_castle) castle_fen+="q";
-	if(castle_fen == "") return "-";	
+	if(castle_fen == "") castle_fen = "-";
 	std::string ep_fen = "-";
 	if(st->ep_square != SQUARE_A1){
 		ep_fen = uci_of_square(st->ep_square);
@@ -297,11 +301,15 @@ std::string pretty_state(State *st) {
 	Move* ptr = sorted_move_buff;
 
 	while (ptr < last_move) {
-		if((ptr-sorted_move_buff) % 6 == 0) buff+="\n";
+		if((ptr-sorted_move_buff) % 4 == 0) buff+="\n";
+		Move move = *ptr;
 		BSPRINTF(ibuff, "%2d. ", (int)(ptr-sorted_move_buff+1))
-		BSPRINTF(mbuff, "%-12s ", move_to_san(st, *ptr++).c_str())
+		BSPRINTF(mbuff, "%-12s ", move_to_san(st, move).c_str())
+		BSPRINTF(ubuff, "%-8s ", uci_of_move(move).c_str())
 		buff += ibuff;
 		buff += mbuff;		
+		buff += ubuff;	
+		ptr++;	
 	}
 	buff += "\n";
 
@@ -329,14 +337,25 @@ Bitboard mobility_for_piece_at_square(State *st, Piece p, Square sq, bool violen
 	}	
 }
 
+Move* add_promotion_moves(State *st, Move *move_buff, Move move, Color prom_col){	
+	for(Figure fig = KNIGHT;fig<=QUEEN;fig++){
+		*(move_buff++) = decorate_move_with_promotion_piece(decorate_move_with_type(move, PROMOTION_MOVE), color_figure(prom_col, fig));
+	}
+	return move_buff;
+}
+
 Move* pseudo_legal_moves_for_piece_at_square(State *st, Piece p, Square sq, Move* move_buff, bool violent, bool quiet) {
-	//std::cout << uci_of_square(sq) << " " << fen_symbol_of(p) << " " << std::endl;
+	Move *orig = move_buff;
+	//if(st->turn == WHITE) std::cout << uci_of_square(sq) << " " << fen_symbol_of(p) << " " << std::endl;
 	Figure fig = figure_of(p);
 	Color col = color_of(p);
 	if (fig == PAWN) {
+		bool is_promotion = (rank_of(sq) == (col ? 6 : 1));		
 		PawnInfo pi = PAWN_INFOS[col][sq];		
 		if(quiet && (pi.num_pushes > 0) && (piece_at_square(st, to_sq_of(pi.pushes[0])) == NO_PIECE)) {
-			*(move_buff++) = pi.pushes[0];
+			if(is_promotion){
+				move_buff = add_promotion_moves(st, move_buff, pi.pushes[0], col);
+			}else *(move_buff++) = pi.pushes[0];			
 			if (pi.num_pushes > 1) {
 				if (piece_at_square(st, to_sq_of(pi.pushes[1])) == NO_PIECE) {
 					*(move_buff++) = pi.pushes[1];
@@ -348,7 +367,9 @@ Move* pseudo_legal_moves_for_piece_at_square(State *st, Piece p, Square sq, Move
 				Square capt_sq = to_sq_of(pi.captures[i]);
 				Piece cp = piece_at_square(st, capt_sq);
 				if( ( (cp != NO_PIECE) && (color_of(cp) == (1-col)) ) || ( st->ep_square == capt_sq ) ){
-					*(move_buff++) = pi.captures[i];
+					if(is_promotion){
+						move_buff = add_promotion_moves(st, move_buff, pi.captures[i], col);
+					}else *(move_buff++) = pi.captures[i];
 				}
 			}
 		}
@@ -378,6 +399,7 @@ Move* pseudo_legal_moves_for_piece_at_square(State *st, Piece p, Square sq, Move
 			}
 		}
 	}	
+	//if(st->turn == WHITE) for(Move* ptr=orig;ptr<move_buff;ptr++)std::cout<<"--> "<<uci_of_move(*ptr)<<std::endl;
 	return move_buff;
 }
 
@@ -443,6 +465,9 @@ void make_move(State* st, Move move) {
 	st->ep_square = SQUARE_A1;
 	remove_piece_from_square(st, from_sq);
 	put_piece_at_square(st, from_p, to_sq);
+	if(type_of_move(move) == PROMOTION_MOVE){
+		put_piece_at_square(st, promotion_piece_of_move(move), to_sq);
+	}
 	if(is_ep_capture){
 		remove_piece_from_square(st, rank_file(to_rank - (st->turn ? 1:-1), to_file));
 	}
