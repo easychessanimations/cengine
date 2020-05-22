@@ -65,9 +65,8 @@ void set_pv_entry(State *st, Move move, Depth depth){
 int comp_sort_moves(const void *vm1, const void *vm2){
 	MoveSortEntry m1 = *((MoveSortEntry*)vm1);
 	MoveSortEntry m2 = *((MoveSortEntry*)vm2);
-	if(m1.is_pv && (!m2.is_pv)) return -1;
-	if((!m1.is_pv) && m2.is_pv) return 1;
-	if(m1.capture > m2.capture) return -1;
+	if(m1.is_pv != m2.is_pv) return m1.is_pv ? -1 : 1;	
+	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;
 	return m1.attack > m2.attack ? -1 : 1;
 }
 
@@ -120,7 +119,11 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Score attack = pop_cnt(king_attack_them & mob);
 
-		if(bitboard_of(king_sq_them) & mob) attack += 3;
+		if(bitboard_of(king_sq_them) & mob) attack+= 3;
+
+		attack += pop_cnt(mob & curr->by_color[1-curr->turn] & (curr->by_figure[QUEEN]||curr->by_figure[ROOK]));
+
+		attack += pop_cnt(mob & curr->by_color[1-curr->turn]);		
 
 		bool is_pv = false;
 
@@ -159,19 +162,19 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Depth max_depth = abi.max_depth;
 
-		if((msptr - sort_legal_moves)>3){
+		if((msptr - sort_legal_moves)>2){
 			max_depth--;
 		}
 
-		if((msptr - sort_legal_moves)>5){
+		if((msptr - sort_legal_moves)>4){
 			max_depth--;
 		}
 
-		if((msptr - sort_legal_moves)>7){
+		if((msptr - sort_legal_moves)>8){
 			max_depth--;
 		}
 
-		if((msptr - sort_legal_moves)>9){
+		if((msptr - sort_legal_moves)>16){
 			max_depth--;
 		}
 
