@@ -162,20 +162,8 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Depth max_depth = abi.max_depth;
 
-		if((msptr - sort_legal_moves)>2){
-			max_depth--;
-		}
-
-		if((msptr - sort_legal_moves)>4){
-			max_depth--;
-		}
-
-		if((msptr - sort_legal_moves)>8){
-			max_depth--;
-		}
-
-		if((msptr - sort_legal_moves)>16){
-			max_depth--;
+		if((msptr - sort_legal_moves)>1){
+			if(abi.current_depth>6) max_depth-=1;
 		}
 
 		Score score = -alpha_beta_rec(lg, AlphaBetaInfo{

@@ -175,7 +175,7 @@ extern "C" {
 
             if(command=="g"){
                 search_stopped = false;
-                int depth = 20;
+                int depth = MAX_STATES - 1;
                 if(num_tokens > 1){                    
                     ti = to_int(tokens[1].c_str());
                     if(ti.ok){
