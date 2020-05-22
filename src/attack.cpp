@@ -11,7 +11,7 @@
 #include "bitboard.hpp"
 #include "piece.hpp"
 
-const int MAX_TRIES = 50;
+const int MAX_TRIES = 1000;
 
 Bitboard BISHOP_ATTACK[BOARD_AREA];
 Bitboard BISHOP_MAGIC_ATTACK[BOARD_AREA];
@@ -258,8 +258,6 @@ void init_keys(){
 }
 
 bool init_attacks() {
-	srand((unsigned int)time(NULL));
-
 	if(VERBOSE) std::cout << "info string initializing attacks" << std::endl;
 	for (Square sq = 0;sq < BOARD_AREA;sq++) {
 		BISHOP_ATTACK[sq] = sliding_attack(sq, (Delta*)BISHOP_DELTAS, EMPTY_BB);
@@ -288,6 +286,7 @@ bool init_attacks() {
 	init_pawn_infos();
 	if(VERBOSE) std::cout << "info string initializing pawn infos done" << std::endl;
 	init_keys();
+	srand((unsigned int)time(NULL));
 	return true;
 }
 

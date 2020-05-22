@@ -66,7 +66,7 @@ State state_from_fen(std::string fen) {
 	memset(&st, 0, sizeof(State));
 
 	if (fen == "") {
-		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";		
+		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";				
 	}
 
 	std::string parts[7];
@@ -194,11 +194,40 @@ std::string move_to_san(State *st, Move move){
 		}
 	}
 	std::string letter = "";
-	if(figure_of(from_p)!=PAWN){
+	if(from_fig!=PAWN){
 		letter = san_letter_of(from_p);
 	}
 	bool is_capture = ( to_p != NO_PIECE ) || ( (from_fig == PAWN) && (to_sq == st->ep_square) );
-	std::string from_spec = figure_of(from_p) == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
+	std::string from_spec = from_fig == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
+	Move san_move_buff[MAX_MOVES];
+	Move *last_legal = generate_legal(st, san_move_buff);
+	bool same_file = false;
+	bool same_rank = false;
+	bool has_many = false;
+	if(from_fig != PAWN){
+		for(Move *tptr=san_move_buff;tptr<last_legal;tptr++){
+			Move tmove = *tptr;
+			Square tfrom = from_sq_of(tmove);
+			Square tto = to_sq_of(tmove);
+			if((tto == to_sq)&&(tfrom != from_sq)){								
+				Piece tpiece = piece_at_square(st, tfrom);
+				if(tpiece == from_p){					
+					has_many = true;
+					if(rank_of(tfrom) == rank_of(from_sq)) same_rank=true;
+					if(file_of(tfrom) == file_of(from_sq)) same_file=true;
+				}
+			}			
+		}
+	}
+	if(has_many){
+		if(same_file && same_rank){
+			from_spec = uci_of_square(from_sq);
+		}else if(same_file){
+			from_spec = uci_of_square(from_sq).substr(1,1);
+		}else{
+			from_spec = uci_of_square(from_sq).substr(0,1);
+		}
+	}
 	std::string takes = is_capture ? "x" : "";
 	std::string to_spec = uci_of_square(to_sq);
 	std::string check = "";
