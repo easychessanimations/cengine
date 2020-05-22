@@ -245,7 +245,7 @@ std::string move_to_san(State *st, Move move){
 	if(type_of_move(move) == PROMOTION_MOVE){
 		prom = "=" + san_symbol_of(promotion_piece_of_move(move));
 	}
-	return letter + from_spec + takes + to_spec + check + prom;
+	return letter + from_spec + takes + to_spec + prom + check;
 }
 
 State *sorted_state;
