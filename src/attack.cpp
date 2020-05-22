@@ -11,6 +11,8 @@
 #include "bitboard.hpp"
 #include "piece.hpp"
 
+const int MAX_TRIES = 50;
+
 Bitboard BISHOP_ATTACK[BOARD_AREA];
 Bitboard BISHOP_MAGIC_ATTACK[BOARD_AREA];
 Bitboard ROOK_ATTACK[BOARD_AREA];
@@ -168,7 +170,7 @@ bool find_magics(std::string label, Delta* deltas, MagicAndShift *store) {
 		Bitboard ma = magic_mobility(sq, sliding_attack(sq, deltas, EMPTY_BB));
 		if (VERBOSE) std::cout << pretty_bitboard(ma) << std::endl;
 		int min_shift = pop_cnt(ma);
-		MagicAndShift ms = find_magic_and_shift(sq, deltas, MAX_MAGIC_SHIFT, min_shift + 4, 5);
+		MagicAndShift ms = find_magic_and_shift(sq, deltas, MAX_MAGIC_SHIFT, min_shift + 4, MAX_TRIES);
 		if (!ms.magic) {
 			if (VERBOSE) std::cout << "finding magics for " << label << " failed" << std::endl;
 			return false;

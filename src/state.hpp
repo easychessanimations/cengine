@@ -11,6 +11,14 @@
 
 extern int split(std::string str, std::string delim, std::string *buff);
 
+struct CastlingRight{
+	bool can_castle;
+	Square rook_orig_square;
+	Piece rook_orig_piece;
+	Bitboard check_empty;
+	Bitboard check_attack;
+};
+
 struct State {
 	bool state_ok;
 	Piece rep[BOARD_AREA];
@@ -19,6 +27,10 @@ struct State {
 	Bitboard by_figure[FIGURE_ARRAY_SIZE];
 	Magic hash_key;
 	bool atomic;
+	CastlingRight castling_rights[4];
+	Square ep_square;
+	uint16_t halfmove_clock;
+	uint16_t fullmove_number;
 };
 
 extern State state_from_fen(std::string fen);

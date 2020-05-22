@@ -105,19 +105,99 @@ State state_from_fen(std::string fen) {
 		}
 	}
 
+	st.castling_rights[0] = CastlingRight{
+		false,
+		SQUARE_H1,
+		color_figure(WHITE, ROOK),
+		bitboard_of(SQUARE_F1)|bitboard_of(SQUARE_G1),
+		bitboard_of(SQUARE_E1)|bitboard_of(SQUARE_F1)
+	};
+
+	st.castling_rights[1] = CastlingRight{
+		false,
+		SQUARE_A1,
+		color_figure(WHITE, ROOK),
+		bitboard_of(SQUARE_D1)|bitboard_of(SQUARE_C1)|bitboard_of(SQUARE_B1),
+		bitboard_of(SQUARE_E1)|bitboard_of(SQUARE_D1)
+	};
+
+	st.castling_rights[2] = CastlingRight{
+		false,
+		SQUARE_H8,
+		color_figure(BLACK, ROOK),
+		bitboard_of(SQUARE_F8)|bitboard_of(SQUARE_G8),
+		bitboard_of(SQUARE_E8)|bitboard_of(SQUARE_F8)
+	};
+
+	st.castling_rights[3] = CastlingRight{
+		false,
+		SQUARE_A8,
+		color_figure(BLACK, ROOK),
+		bitboard_of(SQUARE_D8)|bitboard_of(SQUARE_C8)|bitboard_of(SQUARE_B8),
+		bitboard_of(SQUARE_E8)|bitboard_of(SQUARE_D8)
+	};
+
+	if (num_parts > 2) {
+		for(int i=0;i<parts[2].length();i++){
+			switch(parts[2][i]){
+				case 'K':
+					st.castling_rights[0].can_castle=true;
+					break;
+				case 'Q':
+					st.castling_rights[1].can_castle=true;
+					break;
+				case 'k':
+					st.castling_rights[2].can_castle=true;
+					break;
+				case 'q':
+					st.castling_rights[3].can_castle=true;
+					break;
+			}
+		}
+	}
+
+	st.halfmove_clock = 0;
+
+	if(num_parts>4){
+		ToIntResult tir = to_int(parts[4].c_str());
+		if(tir.ok){
+			st.halfmove_clock = (uint16_t)tir.value;
+		}
+	}
+
+	st.fullmove_number = 1;
+
+	if(num_parts>5){
+		ToIntResult tir = to_int(parts[5].c_str());
+		if(tir.ok){
+			st.fullmove_number = (uint16_t)tir.value;
+		}
+	}
+
 	return st;
 }
 
 std::string move_to_san(State *st, Move move){
 	Square from_sq = from_sq_of(move);
+	Square from_file = file_of(from_sq);
 	Square to_sq = to_sq_of(move);
+	Square to_file = file_of(to_sq);
 	Piece from_p = piece_at_square(st, from_sq);
+	Figure from_fig = figure_of(from_p);
 	Piece to_p = piece_at_square(st, to_sq);
+	if(from_fig==KING){
+		if(to_file-from_file==2){
+			return "O-O";
+		}
+		if(from_file-to_file==2){
+			return "O-O-O";
+		}
+	}
 	std::string letter = "";
 	if(figure_of(from_p)!=PAWN){
 		letter = san_letter_of(from_p);
 	}
-	bool is_capture = to_p != NO_PIECE;
+	bool is_capture = ( to_p != NO_PIECE ) || ( (from_fig == PAWN) && (to_sq == st->ep_square) );
 	std::string from_spec = figure_of(from_p) == PAWN ? ( is_capture ? uci_of_square(from_sq).substr(0,1) : "" ) : "";
 	std::string takes = is_capture ? "x" : "";
 	std::string to_spec = uci_of_square(to_sq);
@@ -154,6 +234,44 @@ Move *sorted_moves(State *st){
 	return last_move;
 }
 
+std::string report_fen(State *st){
+	std::string placement_fen = "";
+	int acc = 0;
+	for(Rank rank = LAST_RANK;rank>=0;rank--){
+		for(File file = 0;file<NUM_FILES;file++){
+			Piece p = piece_at_square(st, rank_file(rank, file));
+			if(p==NO_PIECE){
+				acc++;
+			}else{
+				if(acc){
+					placement_fen+='0'+acc;
+					acc=0;
+				}
+				placement_fen+=fen_symbol_of(p);
+			}
+		}
+		if(acc){
+			placement_fen+='0'+acc;
+			acc=0;
+		}
+		if(rank>0) placement_fen+="/";
+	}
+	std::string turn_fen = st->turn == WHITE ? "w" : "b";
+	std::string castle_fen = "";
+	if(st->castling_rights[0].can_castle) castle_fen+="K";
+	if(st->castling_rights[1].can_castle) castle_fen+="Q";
+	if(st->castling_rights[2].can_castle) castle_fen+="k";
+	if(st->castling_rights[3].can_castle) castle_fen+="q";
+	if(castle_fen == "") return "-";	
+	std::string ep_fen = "-";
+	if(st->ep_square != SQUARE_A1){
+		ep_fen = uci_of_square(st->ep_square);
+	}
+	BSPRINTF(hbuff, "%d", (int)st->halfmove_clock);
+	BSPRINTF(fbuff, "%d", (int)st->fullmove_number);
+	return placement_fen + " " + turn_fen + " " + castle_fen + " " + ep_fen + " " + hbuff + " " + fbuff;
+}
+
 std::string pretty_state(State *st) {
 	std::string buff = "";
 	for (Rank rank = LAST_RANK; rank >= 0; rank--) {		
@@ -167,14 +285,9 @@ std::string pretty_state(State *st) {
 		buff += "\n";
 	}
 	buff += "\n  abcdefgh\n";
-	buff += "\nturn ";
-	if (st->turn == WHITE) {
-		buff += "w";
-	}
-	else {
-		buff += "b";
-	}	
-	BSPRINTF(ebuff, "%d", (int)eval_state(st));
+	buff += "\n";
+	buff += "fen : " + report_fen(st);
+	BSPRINTF(ebuff, " , score : %d", (int)eval_state(st));
 	buff += " ";
 	buff += ebuff;
 	buff += "\n";
@@ -232,8 +345,9 @@ Move* pseudo_legal_moves_for_piece_at_square(State *st, Piece p, Square sq, Move
 		}
 		if (violent) {
 			for (int i = 0;i < pi.num_captures;i++) {
-				Piece cp = piece_at_square(st, to_sq_of(pi.captures[i]));
-				if( (cp != NO_PIECE) && (color_of(cp) == (1-col)) ) {
+				Square capt_sq = to_sq_of(pi.captures[i]);
+				Piece cp = piece_at_square(st, capt_sq);
+				if( ( (cp != NO_PIECE) && (color_of(cp) == (1-col)) ) || ( st->ep_square == capt_sq ) ){
 					*(move_buff++) = pi.captures[i];
 				}
 			}
@@ -243,6 +357,25 @@ Move* pseudo_legal_moves_for_piece_at_square(State *st, Piece p, Square sq, Move
 		while (mobility) {
 			Square to_sq = pop_square(&mobility);
 			*(move_buff++) = move_ft(sq, to_sq);
+		}
+		if(fig==KING){
+			for(int i=0;i<2;i++){
+				CastlingRight cr = st->castling_rights[(1-col)*2+i];
+				if(cr.can_castle){
+					if((cr.check_empty & (st->by_color[BLACK]|st->by_color[WHITE]))==0){						
+						bool ok = true;
+						Bitboard check_attack = cr.check_attack;
+						while(check_attack){
+							Square check_attack_sq = pop_square(&check_attack);
+							if(least_attacker_on_square_of_color(st, check_attack_sq, 1-st->turn)!=NO_FIGURE){
+								ok = false;
+								break;
+							}
+						}
+						if(ok) *(move_buff++) = move_ft(sq, rank_file(rank_of(sq), file_of(sq) + 2 - (4 * i)));
+					}
+				}
+			}
 		}
 	}	
 	return move_buff;
@@ -295,15 +428,33 @@ void set_turn(State *st, Color col){
 	st->turn = col;
 }
 
-void make_move(State* st, Move move) {
-	Square from_sq = from_sq_of(move);
+void make_move(State* st, Move move) {	
+	Square from_sq = from_sq_of(move);	
+	Rank from_rank = rank_of(from_sq);
+	File from_file = file_of(from_sq);
 	Square to_sq = to_sq_of(move);
+	Rank to_rank = rank_of(to_sq);
+	File to_file = file_of(to_sq);
 	Piece from_p = piece_at_square(st, from_sq);
+	Figure from_fig = figure_of(from_p);
 	Piece to_p = piece_at_square(st, to_sq);
+	bool is_ep_capture = (from_fig == PAWN) && (to_sq == st->ep_square);
+	bool is_capture = is_ep_capture || ( to_p != NO_PIECE );
+	st->ep_square = SQUARE_A1;
 	remove_piece_from_square(st, from_sq);
 	put_piece_at_square(st, from_p, to_sq);
+	if(is_ep_capture){
+		remove_piece_from_square(st, rank_file(to_rank - (st->turn ? 1:-1), to_file));
+	}
+	if(from_fig==KING){
+		if((to_file-from_file==2)||(from_file-to_file==2)){
+			CastlingRight cr=st->castling_rights[(1-st->turn)*2+(to_file<from_file?1:0)];
+			remove_piece_from_square(st, cr.rook_orig_square);
+			put_piece_at_square(st, cr.rook_orig_piece, rank_file(from_rank, to_file+(to_file<from_file?1:-1)));
+		}
+	}
 	if(st->atomic){
-		if(to_p != NO_PIECE){
+		if(is_capture){
 			remove_piece_from_square(st, to_sq);
 			Bitboard exp_bb = KING_ATTACK[to_sq];
 			while(exp_bb){
@@ -313,8 +464,52 @@ void make_move(State* st, Move move) {
 				}
 			}
 		}
+	}	
+	if(from_fig==PAWN){
+		if((from_rank==1)&&(to_rank==3)){
+			st->ep_square = rank_file(2, from_file);
+		}
+		if((from_rank==6)&&(to_rank==4)){
+			st->ep_square = rank_file(5, from_file);
+		}
 	}
+	if(st->ep_square!=SQUARE_A1){
+		bool ep_ok = false;
+		PawnInfo pi = PAWN_INFOS[st->turn][st->ep_square];
+		for(int i=0;i<pi.num_captures;i++){
+			Piece test_p = piece_at_square(st, to_sq_of(pi.captures[i]));
+			if(test_p!=NO_PIECE){
+				if(figure_of(test_p)==PAWN){
+					if(color_of(test_p)==(1-st->turn)){
+						ep_ok = true;
+						break;
+					}
+				}
+			}
+		}
+		if(!ep_ok) st->ep_square=SQUARE_A1;
+	}	
+	if(from_fig==KING){
+		st->castling_rights[(1-st->turn)*2].can_castle=false;
+		st->castling_rights[(1-st->turn)*2+1].can_castle=false;
+	}	
+	for(Color col=BLACK;col<=WHITE;col++){
+		for(int i=0;i<2;i++){
+			if(st->castling_rights[col*2+i].can_castle){
+				CastlingRight cr = st->castling_rights[col*2+i];
+				if(piece_at_square(st, cr.rook_orig_square) != cr.rook_orig_piece){
+					st->castling_rights[col*2+i].can_castle=false;
+				}
+			}	
+		}
+	}	
+	if(is_capture||(from_fig==PAWN)){
+		st->halfmove_clock=0;
+	}else{
+		st->halfmove_clock++;
+	}	
 	set_turn(st, 1 - st->turn);
+	if(st->turn==WHITE) st->fullmove_number++;
 }
 
 long long int nodes;
