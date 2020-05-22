@@ -7,9 +7,17 @@
     <script src="index.js"></script>
     <script src="cengine.js"></script>
 </head>
-<body onload="onLoad();">    
-    <input type="text" id="command" />
-    <button onclick="sendCommand();">Send command</button>
+<body onload="onLoad();">        
+    <div style="padding: 5px; margin: 3px; background-color: #ffd;">
+        <input type="text" id="command" style="width: 400px;" />
+        <button onclick="sendCommand();">Send command</button>
+        <button onclick="execute_uci_command('r');" style="background-color: #faa;">Reset</button>
+        <button onclick="execute_uci_command('a');" style="background-color: #aff;">Atomic</button>
+        <button onclick="execute_uci_command('u');" style="background-color: #ffa;">Puzzle</button>
+        <button onclick="execute_uci_command('g');" style="background-color: #afa; font-size: 20px;">Analyze</button>
+        <button onclick="execute_uci_command('s');" style="background-color: #aaf; font-size: 20px;">Stop</button>    
+        <button onclick="execute_uci_command('p 5');" style="background-color: #faf;">Perft 5</button>    
+    </div>
     <br>
     <div id="logroot" style="font-family: monospace;"></div>
     <script>
