@@ -319,7 +319,11 @@ std::string pretty_state(State *st) {
 	}
 	buff += "\n  abcdefgh\n";
 	buff += "\n";
-	buff += "fen : " + report_fen(st);
+	std::string vspec = "Standard";
+	if(st->atomic){
+		vspec = "Atomic";
+	}
+	buff += "  " + vspec + " , fen : " + report_fen(st);
 	BSPRINTF(ebuff, " , score : %d", (int)eval_state(st));
 	buff += " ";
 	buff += ebuff;

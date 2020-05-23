@@ -27,6 +27,8 @@ std::map<std::string, std::string> command_aliases = {
     {"m1", "setoption name MultiPV value 1"},
     {"m3", "setoption name MultiPV value 3"},
     {"m5", "setoption name MultiPV value 5"},
+    {"vs", "setoption name UCI_Variant value Standard"},
+    {"va", "setoption name UCI_Variant value Atomic"},
 };
 
 LinearGame lg;
@@ -148,10 +150,22 @@ public:
     std::string uci();
     UciOption* get_option_by_name(std::string name);
     void set_option(std::string name, std::string value);
+    std::string pretty_option_list();
     Uci(){
         num_options = 0;
     };
 };
+
+std::string Uci::pretty_option_list(){
+    std::string buff = "";
+    for(int i=0;i<num_options;i++){
+        UciOption uo = options[i];
+        BSPRINTF(ubuff, "%-30s", uo.name.c_str());
+        buff += ubuff;
+        buff += " = " + uo.value + "\n";
+    }
+    return buff;
+}
 
 UciOption* Uci::get_option_by_name(std::string name){
     for(int i=0;i<num_options;i++){
@@ -336,6 +350,10 @@ extern "C" {
                 std::cout << uci.uci() << std::endl;
             }
 
+            if(command == "lu"){
+                std::cout << uci.pretty_option_list() << std::endl;
+            }
+
             curr=&lg.states[lg.state_ptr];
 
             ToIntResult ti = to_int(command.c_str());
@@ -398,6 +416,8 @@ extern "C" {
                 std::string name = t.get_up_to("value");
                 std::string value = t.get_up_to("");
                 uci.set_option(name, value);
+                print_state();
+                return;
             }
 
             if(tcommand == "position"){
