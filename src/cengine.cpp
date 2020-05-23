@@ -315,6 +315,16 @@ extern "C" {
         } else {
             //std::cout << "received command " << command << std::endl;
 
+            if(command == "la"){
+                for (auto const& x : command_aliases){
+                    if(x.second != ""){
+                        std::cout << x.first << " : " << x.second << std::endl;
+                    }
+                }
+                std::cout << std::endl;
+                return;
+            }
+
             if(!search_stopped){
                 if((command != "s")&&(command != "stop")){
                     std::cout << command << " command not allowed while searching" << std::endl;
