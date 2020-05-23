@@ -16,6 +16,7 @@
 #include "attack.hpp"
 #include "state.hpp"
 #include "search.hpp"
+#include "uci.hpp"
 
 #include "matein4.cpp"
 
@@ -23,13 +24,7 @@
 #define __EMSCRIPTEN_PTHREADS__
 #endif
 
-std::map<std::string, std::string> command_aliases = {
-    {"m1", "setoption name MultiPV value 1"},
-    {"m3", "setoption name MultiPV value 3"},
-    {"m5", "setoption name MultiPV value 5"},
-    {"vs", "setoption name UCI_Variant value Standard"},
-    {"va", "setoption name UCI_Variant value Atomic"},
-};
+Uci uci;
 
 LinearGame lg;
 
@@ -48,173 +43,32 @@ void *do_search(void *dummy){
     return NULL;
 }
 
-class UciOption;
-
-typedef void SetOptionCallback(UciOption);
-
-class UciOption {
-public:
-    std::string name;
-    std::string kind;
-    std::string *vars;
-    std::string default_value;
-    std::string value;
-    std::string min_value;
-    std::string max_value;
-    SetOptionCallback* callback;
-    int int_value();
-    UciOption set_name(std::string _name);
-    UciOption set_kind(std::string _kind);
-    UciOption set_default_value(std::string _default_value);
-    UciOption set_value(std::string _value);
-    UciOption set_min_value(std::string _min_value);
-    UciOption set_max_value(std::string _max_value);
-    UciOption set_callback(SetOptionCallback* _callback);
-    std::string show();
-    UciOption(){
-        name = "";
-        kind = "string";
-        value = "";
-        default_value = "";
-        callback = NULL;
-    };
-};
-
-UciOption UciOption::set_callback(SetOptionCallback* _callback){
-    callback = _callback;
-    return *this;
+void print_state(){
+    std::cout << pretty_state(curr);
 }
-
-int UciOption::int_value(){
-    ToIntResult ti = to_int(value.c_str());
-    if(ti.ok){
-        return ti.value;
-    }
-    return 0;
-}
-
-UciOption UciOption::set_name(std::string _name){
-    name = _name;
-    return *this;
-}
-
-UciOption UciOption::set_kind(std::string _kind){
-    kind = _kind;
-    return *this;
-}
-
-UciOption UciOption::set_default_value(std::string _default_value){
-    default_value = _default_value;
-    value = _default_value;
-    return *this;
-}
-
-UciOption UciOption::set_value(std::string _value){
-    value = _value;
-    if(callback){
-        callback(*this);
-    }
-    return *this;
-}
-
-UciOption UciOption::set_min_value(std::string _min_value){
-    min_value = _min_value;
-    return *this;
-}
-
-UciOption UciOption::set_max_value(std::string _max_value){
-    max_value = _max_value;
-    return *this;
-}
-
-std::string UciOption::show(){
-    std::string buff = "option name " + name + " type " + kind + " default " + default_value;
-    if(kind == "spin"){
-        buff += " min " + min_value + " max " + max_value;
-    }
-    return buff;
-}
-
-const int MAX_UCI_OPTIONS = 100;
-
-class Uci{
-public:
-    std::string engine_name;
-    std::string engine_author;
-    int num_options;
-    UciOption options[MAX_UCI_OPTIONS];    
-    Uci set_engine_name(std::string _engine_name);
-    Uci set_engine_author(std::string _engine_author);
-    Uci add_option(UciOption uo);    
-    std::string intro();
-    std::string uci();
-    UciOption* get_option_by_name(std::string name);
-    void set_option(std::string name, std::string value);
-    std::string pretty_option_list();
-    Uci(){
-        num_options = 0;
-    };
-};
-
-std::string Uci::pretty_option_list(){
-    std::string buff = "";
-    for(int i=0;i<num_options;i++){
-        UciOption uo = options[i];
-        BSPRINTF(ubuff, "%-30s", uo.name.c_str());
-        buff += ubuff;
-        buff += " = " + uo.value + "\n";
-    }
-    return buff;
-}
-
-UciOption* Uci::get_option_by_name(std::string name){
-    for(int i=0;i<num_options;i++){
-        if(options[i].name == name){
-            return &options[i];
-        }
-    }
-    return NULL;
-}
-
-void Uci::set_option(std::string name, std::string value){
-    UciOption* uo = get_option_by_name(name);
-    if(!uo){
-        std::cout << "warning invalid option" << std::endl;
-    }
-    uo->set_value(value);
-}
-
-Uci Uci::set_engine_name(std::string _engine_name){
-    engine_name = _engine_name;
-    return *this;
-}
-
-Uci Uci::set_engine_author(std::string _engine_author){
-    engine_author = _engine_author;
-    return *this;
-}
-
-Uci Uci::add_option(UciOption uo){
-    options[num_options++] = uo;
-    return *this;
-}
-
-std::string Uci::intro(){
-    return engine_name + " by " + engine_author + "\n";
-}
-
-std::string Uci::uci(){
-    std::string buff = "id name " + engine_name + "\nid author " + engine_author + "\n\n";
-    for(int i=0;i<num_options;i++){
-        buff += options[i].show() + "\n";
-    }
-    return buff + "uciok" + "\n";
-}
-
-Uci uci;
 
 void set_multipv_callback(UciOption uo){
     lg.multipv = uo.int_value();
+}
+
+void position_command_callback(std::string specifier, std::string moves){
+    if(specifier == "startpos"){
+        lg.state_ptr=0;
+        lg.states[0]=state_from_fen("");
+        curr=&lg.states[0];                    
+    }else{
+        lg.state_ptr = 0;        
+        lg.states[0] = state_from_fen(specifier);
+        curr=&lg.states[0];                  
+    }    
+    if(moves != ""){
+        std::string move_ucis[MAX_STATES];
+        int num_moves = split(moves, " ", move_ucis);
+        for(int i=0;i<num_moves;i++){
+            make_uci_move(&lg, move_ucis[i]);
+        }
+        curr=&lg.states[lg.state_ptr];
+    }
 }
 
 void set_uci_variant_callback(UciOption uo){
@@ -230,18 +84,32 @@ void set_uci_variant_callback(UciOption uo){
 extern "C" {
 
     void init() {
-        puzzle_ptr = 5;
-
         init_bitboards();
         init_attacks();
 
+        puzzle_ptr = 5;
+
         State st = state_from_fen("");
+
+        lg.states[0] = st;
+        lg.state_ptr = 0;
+        lg.multipv = 3;
+
+        curr=&lg.states[lg.state_ptr];
 
         search_stopped = true;
 
         uci = Uci()
             .set_engine_name("cengine")
             .set_engine_author("easychessanimations")
+            .set_position_command_callback(position_command_callback)
+            .set_command_aliases({
+                {"m1", "setoption name MultiPV value 1"},
+                {"m3", "setoption name MultiPV value 3"},
+                {"m5", "setoption name MultiPV value 5"},
+                {"vs", "setoption name UCI_Variant value Standard"},
+                {"va", "setoption name UCI_Variant value Atomic"},
+            })
             .add_option(
                 UciOption()
                 .set_name("UCI_Variant")                
@@ -259,68 +127,14 @@ extern "C" {
             );        
 
         std::cout << uci.intro() << std::endl;
-        
-        //std::cout << "least attacker " << pretty_bitboard(ROOK_ATTACK[SQUARE_F8]) << std::endl;
-        //std::cout << "least attacker " << pretty_bitboard(ROOK_MAGIC_ATTACK[SQUARE_F8]) << std::endl;
-        //std::cout << "least attacker " << pretty_bitboard(rook_mobility(SQUARE_F8, 0, 0, true, true)) << std::endl;
-        //std::cout << "least attacker " << pretty_bitboard(mobility_for_piece_at_square(&st, color_figure(BLACK, ROOK), SQUARE_F8, true, true)) << std::endl;
-
-        //return;
-
-        //std::cout << pretty_bitboard(st.by_color[WHITE]);
-
-        //make_move(&st, move_ft(SQUARE_E2, SQUARE_E4));
-
-        lg.states[0] = st;
-        lg.state_ptr = 0;
-        lg.multipv = 3;
-
-        /*std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[WHITE]);    
-        std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[BLACK]);*/
 
         std::cout << pretty_state(&st) << std::endl;
-
-        /*BSPRINTF(sbuff, "buff %10s", "test");
-
-        std::cout << sbuff << std::endl;*/
-
-        /*for(Square sq=0;sq<BOARD_AREA;sq++){
-            Bitboard bb = bitboard_of(sq);
-            Square tsq = pop_square(&bb);
-            std::cout << uci_of_square(tsq) << std::endl;
-        }*/
-
-        //perft(&lg, 5);
-
-        /*Bitboard bb = rook_mobility(SQUARE_A1, bitboard_of(SQUARE_A2), bitboard_of(SQUARE_B7), true, true);
-        std::cout << pretty_bitboard(ROOK_MAGIC_ATTACK[SQUARE_A1]);*/
-
-        /*std::cout << (int)variation_count(bb) << std::endl;
-
-        PartialMask mask = 0;
-
-        while(mask < 5){            
-            Bitboard partial_occup = mask_to_partial_occup(mask, bb);            
-            std::cout << pretty_bitboard(partial_occup);           
-            mask++;
-        }*/
 
         std::cout << "info string engine initialized\n" << std::endl;
     }
 
-    void print_state(){
-        std::cout << pretty_state(curr);
-    }
-
     void execute_uci_command(char* command_cstr) {
         std::string command = command_cstr;
-
-        std::string alias = command_aliases[command];
-
-        if(alias != ""){
-            command = alias;
-            std::cout << "++ " << command << std::endl;
-        }
 
         if((command != "s")&&(command != "stop")) std::cout << std::endl;
 
@@ -329,16 +143,6 @@ extern "C" {
         } else {
             //std::cout << "received command " << command << std::endl;
 
-            if(command == "la"){
-                for (auto const& x : command_aliases){
-                    if(x.second != ""){
-                        std::cout << x.first << " : " << x.second << std::endl;
-                    }
-                }
-                std::cout << std::endl;
-                return;
-            }
-
             if(!search_stopped){
                 if((command != "s")&&(command != "stop")){
                     std::cout << command << " command not allowed while searching" << std::endl;
@@ -346,15 +150,10 @@ extern "C" {
                 }                
             }            
 
-            if(command == "uci"){
-                std::cout << uci.uci() << std::endl;
+            if(uci.execute_uci_command(command)){
+                print_state();
+                return;
             }
-
-            if(command == "lu"){
-                std::cout << uci.pretty_option_list() << std::endl;
-            }
-
-            curr=&lg.states[lg.state_ptr];
 
             ToIntResult ti = to_int(command.c_str());
 
@@ -400,50 +199,6 @@ extern "C" {
 
             if(command == "i"){
                 print_state();
-                return;
-            }
-
-            Tokenizer t = Tokenizer(command);
-
-            std::string tcommand = t.get_token();
-
-            if(tcommand == "setoption"){
-                std::string dummy = t.get_token();
-                if(dummy != "name"){
-                    std::cout << "missing name specifier" << std::endl;
-                    return;
-                }
-                std::string name = t.get_up_to("value");
-                std::string value = t.get_up_to("");
-                uci.set_option(name, value);
-                print_state();
-                return;
-            }
-
-            if(tcommand == "position"){
-                std::string specifier = t.get_token();
-                if(specifier == "startpos"){
-                    lg.state_ptr=0;
-                    lg.states[0]=state_from_fen("");
-                    curr=&lg.states[0];                    
-                }else if(specifier == "fen"){
-                    lg.state_ptr = 0;
-                    std::string fen = t.get_up_to("moves");
-                    lg.states[0] = state_from_fen(fen);
-                    curr=&lg.states[0];                  
-                }else{
-                    std::cout << "invalid position command specifier expected startpos or fen" << std::endl;
-                    return;
-                }                               
-                std::string moves = t.get_up_to("moves");                
-                if(moves == "") moves = t.get_up_to("");                
-                if(moves != ""){
-                    std::string move_ucis[MAX_STATES];
-                    int num_moves = split(moves, " ", move_ucis);
-                    for(int i=0;i<num_moves;i++){
-                        make_uci_move(&lg, move_ucis[i]);
-                    }
-                }
                 return;
             }
 
@@ -493,7 +248,7 @@ extern "C" {
 #endif
             }
 
-            if(command=="s"){
+            if((command=="s")||(command == "stop")){
                 search_stopped = true;
             }
 
@@ -544,13 +299,12 @@ extern "C" {
 
 void uci_loop() {
     std::string line;
-    bool ok = true;
 
-    while (ok) {
+    while(true) {
         std::getline(std::cin, line);
 
         if (line == "x" || line == "exit" || line == "q" || line == "quit") {
-            ok = false;
+            return;
         }
 
         execute_uci_command((char*)line.c_str());

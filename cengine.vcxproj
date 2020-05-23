@@ -26,7 +26,8 @@
 <ClCompile Include="src/piece.cpp" />
 <ClCompile Include="src/search.cpp" />
 <ClCompile Include="src/square.cpp" />
-<ClCompile Include="src/state.cpp">
+<ClCompile Include="src/state.cpp" />
+<ClCompile Include="src/uci.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemGroup>
@@ -38,6 +39,7 @@
 <ClInclude Include="src/search.hpp" />
 <ClInclude Include="src/square.hpp" />
 <ClInclude Include="src/state.hpp" />
+<ClInclude Include="src/uci.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
