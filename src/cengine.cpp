@@ -24,6 +24,8 @@
 
 LinearGame lg;
 
+State *curr;
+
 Depth do_search_depth;
 
 int puzzle_ptr;
@@ -37,6 +39,10 @@ void *do_search(void *dummy){
     return NULL;
 }
 
+class UciOption;
+
+typedef void SetOptionCallback(UciOption);
+
 class UciOption {
 public:
     std::string name;
@@ -46,6 +52,7 @@ public:
     std::string value;
     std::string min_value;
     std::string max_value;
+    SetOptionCallback* callback;
     int int_value();
     UciOption set_name(std::string _name);
     UciOption set_kind(std::string _kind);
@@ -53,8 +60,21 @@ public:
     UciOption set_value(std::string _value);
     UciOption set_min_value(std::string _min_value);
     UciOption set_max_value(std::string _max_value);
+    UciOption set_callback(SetOptionCallback* _callback);
     std::string show();
+    UciOption(){
+        name = "";
+        kind = "string";
+        value = "";
+        default_value = "";
+        callback = NULL;
+    };
 };
+
+UciOption UciOption::set_callback(SetOptionCallback* _callback){
+    callback = _callback;
+    return *this;
+}
 
 int UciOption::int_value(){
     ToIntResult ti = to_int(value.c_str());
@@ -82,6 +102,9 @@ UciOption UciOption::set_default_value(std::string _default_value){
 
 UciOption UciOption::set_value(std::string _value){
     value = _value;
+    if(callback){
+        callback(*this);
+    }
     return *this;
 }
 
@@ -116,10 +139,29 @@ public:
     Uci add_option(UciOption uo);    
     std::string intro();
     std::string uci();
+    UciOption* get_option_by_name(std::string name);
+    void set_option(std::string name, std::string value);
     Uci(){
         num_options = 0;
     };
 };
+
+UciOption* Uci::get_option_by_name(std::string name){
+    for(int i=0;i<num_options;i++){
+        if(options[i].name == name){
+            return &options[i];
+        }
+    }
+    return NULL;
+}
+
+void Uci::set_option(std::string name, std::string value){
+    UciOption* uo = get_option_by_name(name);
+    if(!uo){
+        std::cout << "warning invalid option" << std::endl;
+    }
+    uo->set_value(value);
+}
 
 Uci Uci::set_engine_name(std::string _engine_name){
     engine_name = _engine_name;
@@ -150,6 +192,20 @@ std::string Uci::uci(){
 
 Uci uci;
 
+void set_multipv_callback(UciOption uo){
+    lg.multipv = uo.int_value();
+}
+
+void set_uci_variant_callback(UciOption uo){
+    lg.state_ptr=0;
+    lg.states[0]=state_from_fen("");
+    curr=&lg.states[0];                    
+
+    if(uo.value == "Atomic"){
+        lg.states[0].atomic = true;
+    }
+}
+
 extern "C" {
 
     void init() {
@@ -167,11 +223,18 @@ extern "C" {
             .set_engine_author("easychessanimations")
             .add_option(
                 UciOption()
+                .set_name("UCI_Variant")                
+                .set_default_value("Standard")                
+                .set_callback(set_uci_variant_callback)
+            )        
+            .add_option(
+                UciOption()
                 .set_name("MultiPV")
                 .set_kind("spin")
                 .set_default_value("1")
                 .set_min_value("1")
                 .set_max_value("20")
+                .set_callback(set_multipv_callback)
             );        
 
         std::cout << uci.intro() << std::endl;
@@ -223,8 +286,6 @@ extern "C" {
 
         std::cout << "info string engine initialized\n" << std::endl;
     }
-
-    State *curr;
 
     void print_state(){
         std::cout << pretty_state(curr);
@@ -303,6 +364,17 @@ extern "C" {
             Tokenizer t = Tokenizer(command);
 
             std::string tcommand = t.get_token();
+
+            if(tcommand == "setoption"){
+                std::string dummy = t.get_token();
+                if(dummy != "name"){
+                    std::cout << "missing name specifier" << std::endl;
+                    return;
+                }
+                std::string name = t.get_up_to("value");
+                std::string value = t.get_up_to("");
+                uci.set_option(name, value);
+            }
 
             if(tcommand == "position"){
                 std::string specifier = t.get_token();
