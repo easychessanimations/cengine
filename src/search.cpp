@@ -447,4 +447,6 @@ void search(LinearGame *lg, Depth depth){
 	}else{
 		std::cout << "bestmove (none) " << std::endl;	
 	}	
+
+	search_stopped = true;
 }

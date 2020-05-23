@@ -27,6 +27,8 @@ Note that `vcvarsall` is Visual Studio's script that sets up a build environment
 emcc src/attack.cpp src/bitboard.cpp src/cengine.cpp src/matein4.cpp src/piece.cpp src/search.cpp src/square.cpp src/state.cpp -s WASM=1 -s TOTAL_MEMORY=200MB -s ALLOW_MEMORY_GROWTH=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=2 -D WASM -o wasmbuild/cengine.html -s EXPORTED_FUNCTIONS="['_main','_execute_uci_command']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['cwrap']"
 ```
 
+It is ok to get `USE_PTHREADS + ALLOW_MEMORY_GROWTH may run non-wasm code slowly` warning.
+
 ## Building the site
 
 ### Windows

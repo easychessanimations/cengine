@@ -37,6 +37,119 @@ void *do_search(void *dummy){
     return NULL;
 }
 
+class UciOption {
+public:
+    std::string name;
+    std::string kind;
+    std::string *vars;
+    std::string default_value;
+    std::string value;
+    std::string min_value;
+    std::string max_value;
+    int int_value();
+    UciOption set_name(std::string _name);
+    UciOption set_kind(std::string _kind);
+    UciOption set_default_value(std::string _default_value);
+    UciOption set_value(std::string _value);
+    UciOption set_min_value(std::string _min_value);
+    UciOption set_max_value(std::string _max_value);
+    std::string show();
+};
+
+int UciOption::int_value(){
+    ToIntResult ti = to_int(value.c_str());
+    if(ti.ok){
+        return ti.value;
+    }
+    return 0;
+}
+
+UciOption UciOption::set_name(std::string _name){
+    name = _name;
+    return *this;
+}
+
+UciOption UciOption::set_kind(std::string _kind){
+    kind = _kind;
+    return *this;
+}
+
+UciOption UciOption::set_default_value(std::string _default_value){
+    default_value = _default_value;
+    value = _default_value;
+    return *this;
+}
+
+UciOption UciOption::set_value(std::string _value){
+    value = _value;
+    return *this;
+}
+
+UciOption UciOption::set_min_value(std::string _min_value){
+    min_value = _min_value;
+    return *this;
+}
+
+UciOption UciOption::set_max_value(std::string _max_value){
+    max_value = _max_value;
+    return *this;
+}
+
+std::string UciOption::show(){
+    std::string buff = "option name " + name + " type " + kind + " default " + default_value;
+    if(kind == "spin"){
+        buff += " min " + min_value + " max " + max_value;
+    }
+    return buff;
+}
+
+const int MAX_UCI_OPTIONS = 100;
+
+class Uci{
+public:
+    std::string engine_name;
+    std::string engine_author;
+    int num_options;
+    UciOption options[MAX_UCI_OPTIONS];    
+    Uci set_engine_name(std::string _engine_name);
+    Uci set_engine_author(std::string _engine_author);
+    Uci add_option(UciOption uo);    
+    std::string intro();
+    std::string uci();
+    Uci(){
+        num_options = 0;
+    };
+};
+
+Uci Uci::set_engine_name(std::string _engine_name){
+    engine_name = _engine_name;
+    return *this;
+}
+
+Uci Uci::set_engine_author(std::string _engine_author){
+    engine_author = _engine_author;
+    return *this;
+}
+
+Uci Uci::add_option(UciOption uo){
+    options[num_options++] = uo;
+    return *this;
+}
+
+std::string Uci::intro(){
+    return engine_name + " by " + engine_author + "\n";
+}
+
+std::string Uci::uci(){
+    std::string buff = "id name " + engine_name + "\nid author " + engine_author + "\n\n";
+    for(int i=0;i<num_options;i++){
+        buff += options[i].show() + "\n";
+    }
+    return buff + "uciok" + "\n";
+}
+
+Uci uci;
+
 extern "C" {
 
     void init() {
@@ -46,6 +159,22 @@ extern "C" {
         init_attacks();
 
         State st = state_from_fen("");
+
+        search_stopped = true;
+
+        uci = Uci()
+            .set_engine_name("cengine")
+            .set_engine_author("easychessanimations")
+            .add_option(
+                UciOption()
+                .set_name("MultiPV")
+                .set_kind("spin")
+                .set_default_value("1")
+                .set_min_value("1")
+                .set_max_value("20")
+            );        
+
+        std::cout << uci.intro() << std::endl;
         
         //std::cout << "least attacker " << pretty_bitboard(ROOK_ATTACK[SQUARE_F8]) << std::endl;
         //std::cout << "least attacker " << pretty_bitboard(ROOK_MAGIC_ATTACK[SQUARE_F8]) << std::endl;
@@ -110,6 +239,17 @@ extern "C" {
             std::cout << command << " command recognized but not supported in this mode" << std::endl;
         } else {
             //std::cout << "received command " << command << std::endl;
+
+            if(!search_stopped){
+                if((command != "s")&&(command != "stop")){
+                    std::cout << command << " command not allowed while searching" << std::endl;
+                    return;
+                }                
+            }            
+
+            if(command == "uci"){
+                std::cout << uci.uci() << std::endl;
+            }
 
             curr=&lg.states[lg.state_ptr];
 
