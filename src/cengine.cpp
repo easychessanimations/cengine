@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <map>
 
 #ifndef WASM
 #include <thread>
@@ -21,6 +22,12 @@
 #ifdef GCCBUILD
 #define __EMSCRIPTEN_PTHREADS__
 #endif
+
+std::map<std::string, std::string> command_aliases = {
+    {"m1", "setoption name MultiPV value 1"},
+    {"m3", "setoption name MultiPV value 3"},
+    {"m5", "setoption name MultiPV value 5"},
+};
 
 LinearGame lg;
 
@@ -293,6 +300,13 @@ extern "C" {
 
     void execute_uci_command(char* command_cstr) {
         std::string command = command_cstr;
+
+        std::string alias = command_aliases[command];
+
+        if(alias != ""){
+            command = alias;
+            std::cout << "++ " << command << std::endl;
+        }
 
         if((command != "s")&&(command != "stop")) std::cout << std::endl;
 
