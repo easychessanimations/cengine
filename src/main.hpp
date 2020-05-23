@@ -58,4 +58,58 @@ inline int split(std::string str, std::string delim, std::string *buff) {
 	return cnt;
 }
 
+class Tokenizer{
+public:	
+	std::string content;
+	std::string shift_char(){
+		if(content == "") return "";
+		std::string c = content.substr(0,1);
+		content = content.substr(1);
+		return c;
+	};
+	void flush(){		
+		while(true){
+			if(content == ""){
+				return;
+			}else{
+				if(content[0] == ' '){
+					shift_char();
+				}else{
+					return;
+				}
+			}
+		}
+	};
+	std::string get_token(){
+		flush();
+		if(content == "") return "";		
+		std::string buff = "";
+		while(true){
+			if(content == ""){
+				return buff;
+			}else{
+				std::string c = shift_char();
+				if(c == " ") return buff;
+				buff += c;
+			}
+		}
+	};
+	std::string get_up_to(std::string up_to){
+		std::string buff = "";
+		while(true){
+			if(content == "") return buff;
+			std::string token = get_token();
+			if(token == up_to) return buff;
+			if(buff == ""){
+				buff = token;
+			}else{
+				buff = buff + " " + token;
+			}
+		}
+	};
+	Tokenizer(std::string _content){
+		content = _content;
+	};
+};
+
 #endif

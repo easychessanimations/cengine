@@ -300,6 +300,37 @@ extern "C" {
                 return;
             }
 
+            Tokenizer t = Tokenizer(command);
+
+            std::string tcommand = t.get_token();
+
+            if(tcommand == "position"){
+                std::string specifier = t.get_token();
+                if(specifier == "startpos"){
+                    lg.state_ptr=0;
+                    lg.states[0]=state_from_fen("");
+                    curr=&lg.states[0];                    
+                }else if(specifier == "fen"){
+                    lg.state_ptr = 0;
+                    std::string fen = t.get_up_to("moves");
+                    lg.states[0] = state_from_fen(fen);
+                    curr=&lg.states[0];                  
+                }else{
+                    std::cout << "invalid position command specifier expected startpos or fen" << std::endl;
+                    return;
+                }                               
+                std::string moves = t.get_up_to("moves");                
+                if(moves == "") moves = t.get_up_to("");                
+                if(moves != ""){
+                    std::string move_ucis[MAX_STATES];
+                    int num_moves = split(moves, " ", move_ucis);
+                    for(int i=0;i<num_moves;i++){
+                        make_uci_move(&lg, move_ucis[i]);
+                    }
+                }
+                return;
+            }
+
             std::string tokens[20];
             int num_tokens = split(command, " ", tokens);
 

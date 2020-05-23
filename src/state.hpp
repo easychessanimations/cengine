@@ -121,4 +121,6 @@ extern Piece piece_at_square(State *st, Square sq);
 
 extern Bitboard mobility_for_piece_at_square(State *st, Piece p, Square sq, bool violent, bool quiet);
 
+extern void make_uci_move(LinearGame* lg, std::string move_uci);
+
 #endif

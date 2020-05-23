@@ -577,6 +577,19 @@ void pop_state(LinearGame* lg) {
 	lg->state_ptr--;
 }
 
+void make_uci_move(LinearGame* lg, std::string move_uci){
+	Move legal_moves[MAX_MOVES];
+	Move* last_legal = generate_legal(&lg->states[lg->state_ptr], legal_moves);
+	for(Move* ptr = legal_moves; ptr < last_legal; ptr++){
+		if(uci_of_move(*ptr) == move_uci){
+			push_state(lg);
+			make_move(&lg->states[lg->state_ptr], *ptr);
+			return;
+		}
+	}
+	std::cout << "warning " << move_uci << " is not legal" << std::endl;
+}
+
 void perft_rec(LinearGame* lg, int current_depth, int max_depth) {		
 	//std::cout << pretty_state(&lg->states[lg->state_ptr]);		
 	if (current_depth == max_depth) {
