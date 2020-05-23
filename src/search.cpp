@@ -171,10 +171,6 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Depth max_depth = abi.max_depth;
 
-		if((msptr - sort_legal_moves)>1){
-			if(abi.current_depth>6) max_depth-=1;
-		}
-
 		Score score = -alpha_beta_rec(lg, AlphaBetaInfo{
 			(Score)(-abi.beta),
 			(Score)(-alpha),
@@ -233,7 +229,7 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 
 bool mate_found;
 
-const Depth DOUBLE_ITERATION_LIMIT = 14;
+const Depth DOUBLE_ITERATION_LIMIT = MAX_STATES;
 
 void print_multipv_info_item(MultipvInfoItem *mi){
 	std::cout << "info multipv " << (int)mi->index << " depth " << (int)mi->depth << " time " << mi->time << " ";
