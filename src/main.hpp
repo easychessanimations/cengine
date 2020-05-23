@@ -55,7 +55,7 @@ inline int split(std::string str, std::string delim, std::string *buff) {
 			buff[cnt++] = str;
 		}
 	}
-	return cnt + 1;
+	return cnt;
 }
 
 #endif

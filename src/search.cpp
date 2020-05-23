@@ -220,7 +220,8 @@ std::string get_pv(LinearGame *lg, Depth max_depth){
 			root = false;
 		}		
 		if(entry.ok){
-			buff += uci_of_move(entry.moves[0]) + " ";						
+			if(buff != "") buff += " ";
+			buff += uci_of_move(entry.moves[0]);						
 			make_move(&st, entry.moves[0]);
 		}else{
 			ok = false;

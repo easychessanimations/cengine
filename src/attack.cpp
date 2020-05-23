@@ -259,6 +259,11 @@ void init_keys(){
 
 bool init_attacks() {
 	srand((unsigned int)1234323);
+#ifdef WASM
+#ifndef GCCBUILD
+	srand((unsigned int)4334998);
+#endif
+#endif
 	if(VERBOSE) std::cout << "info string initializing attacks" << std::endl;
 	for (Square sq = 0;sq < BOARD_AREA;sq++) {
 		BISHOP_ATTACK[sq] = sliding_attack(sq, (Delta*)BISHOP_DELTAS, EMPTY_BB);
