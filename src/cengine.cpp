@@ -97,7 +97,7 @@ extern "C" {
     void execute_uci_command(char* command_cstr) {
         std::string command = command_cstr;
 
-        std::cout << std::endl;
+        if((command != "s")&&(command != "stop")) std::cout << std::endl;
 
         if (command == "x" || command == "exit" || command == "q" || command == "quit") {
             std::cout << command << " command recognized but not supported in this mode" << std::endl;

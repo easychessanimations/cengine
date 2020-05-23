@@ -382,7 +382,7 @@ void search(LinearGame *lg, Depth depth){
 	Move *last_legal = generate_legal(&lg->states[lg->state_ptr], check_legal_moves);
 
 	if((last_legal - check_legal_moves) < lg->multipv){
-		lg->eff_multipv = last_legal - check_legal_moves;
+		lg->eff_multipv = (int8_t)(last_legal - check_legal_moves);
 	}
 
 	if(lg->eff_multipv <= 0){
