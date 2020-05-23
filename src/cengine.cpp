@@ -46,6 +46,13 @@ extern "C" {
         init_attacks();
 
         State st = state_from_fen("");
+        
+        //std::cout << "least attacker " << pretty_bitboard(ROOK_ATTACK[SQUARE_F8]) << std::endl;
+        //std::cout << "least attacker " << pretty_bitboard(ROOK_MAGIC_ATTACK[SQUARE_F8]) << std::endl;
+        //std::cout << "least attacker " << pretty_bitboard(rook_mobility(SQUARE_F8, 0, 0, true, true)) << std::endl;
+        //std::cout << "least attacker " << pretty_bitboard(mobility_for_piece_at_square(&st, color_figure(BLACK, ROOK), SQUARE_F8, true, true)) << std::endl;
+
+        //return;
 
         //std::cout << pretty_bitboard(st.by_color[WHITE]);
 

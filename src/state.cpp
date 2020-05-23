@@ -66,7 +66,7 @@ State state_from_fen(std::string fen) {
 	memset(&st, 0, sizeof(State));
 
 	if (fen == "") {
-		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";				
+		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";						
 	}
 
 	std::string parts[7];
