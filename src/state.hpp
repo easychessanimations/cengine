@@ -83,6 +83,7 @@ struct LinearGame {
 	Move ignored_root_moves[MAX_MULTIPV];
 	Move* last_ignored_root_move;
 	int8_t multipv;
+	int8_t eff_multipv;
 	MultipvInfo current_multipv;
 	MultipvInfo last_good_multipv;
 };

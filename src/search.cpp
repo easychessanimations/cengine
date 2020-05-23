@@ -248,7 +248,7 @@ void search_inner(LinearGame *lg, Depth depth){
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){		
 		lg->last_ignored_root_move = lg->ignored_root_moves;
 		lg->current_multipv.num_items = 0;
-		for(int8_t multipv = 1; multipv <= lg->multipv; multipv++){
+		for(int8_t multipv = 1; multipv <= lg->eff_multipv; multipv++){
 			Score window_low = INFINITE_SCORE;
 			Score window_high = INFINITE_SCORE;
 
@@ -376,6 +376,21 @@ void search(LinearGame *lg, Depth depth){
 
 	lg->last_good_multipv.num_items = 0;
 
+	lg->eff_multipv = lg->multipv;
+
+	Move check_legal_moves[MAX_MOVES];
+	Move *last_legal = generate_legal(&lg->states[lg->state_ptr], check_legal_moves);
+
+	if((last_legal - check_legal_moves) < lg->multipv){
+		lg->eff_multipv = last_legal - check_legal_moves;
+	}
+
+	if(lg->eff_multipv <= 0){
+		std::cout << "info string no legal moves" << std::endl;
+		std::cout << "bestmove (none)" << std::endl;
+		return;
+	}
+
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
 		if(iter_depth <= DOUBLE_ITERATION_LIMIT){
 			search_inner(lg, iter_depth);
@@ -385,7 +400,7 @@ void search(LinearGame *lg, Depth depth){
 		}
 		sort_multipv(&lg->current_multipv);
 		bool has_full_multipv = false;
-		if(lg->current_multipv.num_items >= lg->multipv){
+		if(lg->current_multipv.num_items >= lg->eff_multipv){
 			lg->last_good_multipv = lg->current_multipv;
 			has_full_multipv = true;
 		}
