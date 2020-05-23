@@ -53,6 +53,7 @@ extern "C" {
 
         lg.states[0] = st;
         lg.state_ptr = 0;
+        lg.multipv = 3;
 
         /*std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[WHITE]);    
         std::cout << pretty_bitboard(lg.states[lg.state_ptr].by_color[BLACK]);*/

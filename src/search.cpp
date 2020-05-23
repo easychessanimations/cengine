@@ -70,6 +70,13 @@ int comp_sort_moves(const void *vm1, const void *vm2){
 	return m1.attack > m2.attack ? -1 : 1;
 }
 
+bool is_ignored_root_move(LinearGame* lg, Move move){
+	for(Move *ptr=lg->ignored_root_moves;ptr<lg->last_ignored_root_move;ptr++){
+		if(move == *ptr) return true;
+	}
+	return false;
+}
+
 Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 	if(search_stopped) return 0;
 
@@ -157,6 +164,8 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Move move = move_sort_entry.move;
 
+		if(is_ignored_root_move(lg, move)) continue;
+
 		push_state(lg);
 		make_move(&lg->states[lg->state_ptr], move); 
 
@@ -225,84 +234,105 @@ bool mate_found;
 
 const Depth DOUBLE_ITERATION_LIMIT = 14;
 
+void print_multipv_info_item(MultipvInfoItem *mi){
+	std::cout << "info multipv " << (int)mi->index << " depth " << (int)mi->depth << " time " << mi->time << " ";
+	BSPRINTF(nbuff, "%lld", mi->nodes);
+	std::cout << "nodes " << nbuff << " nps " << mi->nps << " score cp " << (int)mi->score << " pv " << mi->pv << std::endl;	
+}
+
 void search_inner(LinearGame *lg, Depth depth){
 	mate_found = false;
 
 	Score last_score = 0;
 
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){		
-		Score window_low = INFINITE_SCORE;
-		Score window_high = INFINITE_SCORE;
+		lg->last_ignored_root_move = lg->ignored_root_moves;
+		lg->current_multipv.num_items = 0;
+		for(int8_t multipv = 1; multipv <= lg->multipv; multipv++){
+			Score window_low = INFINITE_SCORE;
+			Score window_high = INFINITE_SCORE;
 
-		if(iter_depth > 4){
-			window_low = 50;
-			window_high = 50;
-		}
-
-		bool succ = false;		
-
-		Score score;
-
-		while(!succ){
-			Score alpha = last_score - window_low;
-			Score beta = last_score + window_high;
-
-			score = alpha_beta_rec(lg, AlphaBetaInfo{
-				alpha,
-				beta,
-				0,
-				iter_depth
-			});		
-
-			if(search_stopped){
-				break;
+			if(iter_depth > 4){
+				window_low = 50;
+				window_high = 50;
 			}
 
-			if(score == alpha){
-				window_low *= 2;
-			}else if(score == beta){
-				window_high *= 2;
-			}else{
-				succ = true;
-			}
-		}
+			bool succ = false;		
 
-		last_score = score;
+			Score score;
 
-		if((score < -WIN_SCORE) || (score > WIN_SCORE)){
-			mate_found = true;
-		}
+			while(!succ){
+				Score alpha = last_score - window_low;
+				Score beta = last_score + window_high;
 
-		end = std::chrono::steady_clock::now();
+				score = alpha_beta_rec(lg, AlphaBetaInfo{
+					alpha,
+					beta,
+					0,
+					iter_depth
+				});		
 
-		BSPRINTF(nbuff, "%lld", nodes);
-
-		int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() + 1;
-
-		int nps = (int)(nodes / ms)*1000;
-
-		bool print_pv = depth <= DOUBLE_ITERATION_LIMIT ? depth == iter_depth : iter_depth > DOUBLE_ITERATION_LIMIT;
-
-		if(search_stopped || mate_found){
-			print_pv = true;
-		}
-
-		if(print_pv){
-			std::cout << "info depth " << (int)iter_depth << " time " << ms << " ";
-			std::cout << "nodes " << nbuff << " nps " << nps << " score " << (int)score << " pv " << get_pv(lg, iter_depth) << std::endl;	
-
-			has_finished_ponder_move = false;
-
-			if(has_root_move){
-				has_finished_root_move = true;
-				finished_root_move = root_move;
-				State st = lg->states[lg->state_ptr];
-				make_move(&st, finished_root_move);
-				PvEntry entry = get_pv_entry(&st);
-				if(entry.ok){
-					has_finished_ponder_move = true;
-					finished_ponder_move = entry.moves[0];
+				if(search_stopped){
+					break;
 				}
+
+				if(score == alpha){
+					window_low *= 2;
+				}else if(score == beta){
+					window_high *= 2;
+				}else{
+					succ = true;
+				}
+			}
+
+			last_score = score;
+
+			if((score < -WIN_SCORE) || (score > WIN_SCORE)){
+				mate_found = true;
+			}
+
+			end = std::chrono::steady_clock::now();			
+
+			int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() + 1;
+
+			int nps = (int)(nodes / ms)*1000;
+
+			bool print_pv = depth <= DOUBLE_ITERATION_LIMIT ? depth == iter_depth : iter_depth > DOUBLE_ITERATION_LIMIT;
+
+			if(mate_found){
+				print_pv = true;
+			}
+
+			if(print_pv){
+				MultipvInfoItem* ci = &lg->current_multipv.items[multipv-1];
+
+				ci->depth = depth;
+				ci->time = ms;
+				ci->nodes = nodes;
+				ci->nps = nps;
+				ci->score = score;
+				ci->pv = get_pv(lg, iter_depth);
+
+				has_finished_ponder_move = false;
+
+				if(has_root_move){
+					has_finished_root_move = true;
+					finished_root_move = root_move;
+					*lg->last_ignored_root_move++ = root_move;
+					State st = lg->states[lg->state_ptr];					
+					make_move(&st, finished_root_move);
+					PvEntry entry = get_pv_entry(&st);
+					if(entry.ok){
+						has_finished_ponder_move = true;
+						finished_ponder_move = entry.moves[0];
+					}
+				}
+
+				lg->current_multipv.num_items = multipv;
+			}
+
+			if(search_stopped || mate_found){
+				break;
 			}
 		}
 
@@ -310,6 +340,29 @@ void search_inner(LinearGame *lg, Depth depth){
 			break;
 		}
 	}	
+}
+
+void print_multipv(MultipvInfo* mi){
+	for(int i=0;i<mi->num_items;i++){
+		mi->items[i].index = i+1;
+		print_multipv_info_item(&mi->items[i]);
+	}
+}
+
+int comp_multipv(const void *m1, const void *m2){
+	MultipvInfoItem mi1 = *((MultipvInfoItem*)m1);
+	MultipvInfoItem mi2 = *((MultipvInfoItem*)m2);
+	if(mi1.depth != mi2.depth){
+		return mi1.depth > mi2.depth ? -1 : 1;
+	}
+	return mi2.score - mi1.score;
+}
+
+void sort_multipv(MultipvInfo* mi){
+	if(mi->num_items<=0){
+		return;
+	}
+	qsort(mi->items, mi->num_items, sizeof(MultipvInfoItem), comp_multipv);
 }
 
 void search(LinearGame *lg, Depth depth){
@@ -321,6 +374,8 @@ void search(LinearGame *lg, Depth depth){
 	has_finished_root_move = false;
 	has_finished_ponder_move = false;
 
+	lg->last_good_multipv.num_items = 0;
+
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
 		if(iter_depth <= DOUBLE_ITERATION_LIMIT){
 			search_inner(lg, iter_depth);
@@ -328,14 +383,52 @@ void search(LinearGame *lg, Depth depth){
 			iter_depth = depth;
 			search_inner(lg, depth);
 		}
+		sort_multipv(&lg->current_multipv);
+		bool has_full_multipv = false;
+		if(lg->current_multipv.num_items >= lg->multipv){
+			lg->last_good_multipv = lg->current_multipv;
+			has_full_multipv = true;
+		}
+		if(has_full_multipv || mate_found){
+			print_multipv(&lg->current_multipv);
+		}
 		if(search_stopped || mate_found) break;
 	}
 
+	MultipvInfo final_multipv_info = lg->last_good_multipv;
+
+	if((final_multipv_info.num_items <= 0) || mate_found){
+		final_multipv_info = lg->current_multipv;
+	}
+
+	has_finished_root_move = false;
+	has_finished_ponder_move = false;
+
+	std::string finished_root_move_uci = "";
+	std::string finished_ponder_move_uci = "";
+
+	if(final_multipv_info.num_items > 0){
+		std::string final_pv = final_multipv_info.items[0].pv;
+
+		std::string pv_moves[MAX_STATES];
+        int num_pv_moves = split(final_pv, " ", pv_moves);
+
+        if(num_pv_moves > 0){
+        	has_finished_root_move = true;
+        	finished_root_move_uci = pv_moves[0];
+        }
+
+        if(num_pv_moves > 1){
+        	has_finished_ponder_move = true;
+        	finished_ponder_move_uci = pv_moves[1];
+        }
+	}
+
 	if(has_finished_root_move){
-		std::cout << "bestmove " << uci_of_move(finished_root_move);	
+		std::cout << "bestmove " << finished_root_move_uci;	
 		
 		if(has_finished_ponder_move){
-			std::cout << " ponder " << uci_of_move(finished_ponder_move) << std::endl;
+			std::cout << " ponder " << finished_ponder_move_uci << std::endl;
 		}else{
 			std::cout << std::endl;
 		}

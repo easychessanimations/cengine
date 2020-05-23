@@ -9,6 +9,10 @@
 #include "bitboard.hpp"
 #include "attack.hpp"
 
+typedef int16_t Score;
+
+typedef int8_t Depth;
+
 extern int split(std::string str, std::string delim, std::string *buff);
 
 struct CastlingRight{
@@ -52,9 +56,35 @@ extern void make_move(State *st, Move move);
 
 const int MAX_STATES = 100;
 
+const int MAX_MULTIPV = 20;
+
+struct MultipvInfoItem{
+	int8_t index;
+	Depth depth;
+	int time;
+	long long int nodes;
+	int nps;
+	Score score;
+	std::string pv;
+};
+
+struct MultipvInfo{
+	MultipvInfoItem items[MAX_MULTIPV];
+	int8_t num_items;
+	bool has_bestmove;
+	Move bestmove;
+	bool has_ponder;
+	Move ponder;
+};
+
 struct LinearGame {
 	State states[MAX_STATES];
 	int state_ptr;
+	Move ignored_root_moves[MAX_MULTIPV];
+	Move* last_ignored_root_move;
+	int8_t multipv;
+	MultipvInfo current_multipv;
+	MultipvInfo last_good_multipv;
 };
 
 extern void push_state(LinearGame *lg);
@@ -71,10 +101,6 @@ extern bool is_in_check(State *st);
 extern std::string move_to_san(State *st, Move move);
 
 extern long long nodes;
-
-typedef int16_t Score;
-
-typedef int8_t Depth;
 
 const Score INFINITE_SCORE = 20000;
 const Score MATE_SCORE = 10000;
