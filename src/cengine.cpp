@@ -30,7 +30,7 @@ LinearGame lg;
 
 State *curr;
 
-Depth do_search_depth;
+GoParams do_search_go_params;
 
 int puzzle_ptr;
 
@@ -38,7 +38,7 @@ void *do_search(void *dummy){
 
     std::cout << "doing search" << std::endl;
 
-    search(&lg, do_search_depth);
+    search(&lg, do_search_go_params);
 
     return NULL;
 }
@@ -81,6 +81,24 @@ void set_uci_variant_callback(UciOption uo){
     }
 }
 
+void go_command_callback(GoParams go_params){
+    search_stopped = false;    
+#ifndef WASM
+    std::thread search_th(search, &lg, go_params);
+    search_th.detach();
+#else
+#ifdef __EMSCRIPTEN_PTHREADS__
+    pthread_t t1;
+
+    do_search_go_params = go_params;
+
+    pthread_create(&t1, NULL, &do_search, NULL);
+#else
+    search(&lg, go_params);
+#endif
+#endif
+}
+
 extern "C" {
 
     void init() {
@@ -103,6 +121,7 @@ extern "C" {
             .set_engine_name("cengine")
             .set_engine_author("easychessanimations")
             .set_position_command_callback(position_command_callback)
+            .set_go_command_callback(go_command_callback)
             .set_command_aliases({
                 {"m1", "setoption name MultiPV value 1"},
                 {"m3", "setoption name MultiPV value 3"},
@@ -221,31 +240,6 @@ extern "C" {
                 perft(&lg, depth);
                 std::cout << std::endl;
                 return;
-            }
-
-            if(command=="g"){
-                search_stopped = false;
-                int depth = MAX_STATES - 1;
-                if(num_tokens > 1){                    
-                    ti = to_int(tokens[1].c_str());
-                    if(ti.ok){
-                        depth = ti.value;
-                    }
-                }
-#ifndef WASM
-                std::thread search_th(search, &lg, depth);
-                search_th.detach();
-#else
-#ifdef __EMSCRIPTEN_PTHREADS__
-                pthread_t t1;
-
-                do_search_depth = depth;
-
-                pthread_create(&t1, NULL, &do_search, NULL);
-#else
-                search(&lg, depth);
-#endif
-#endif
             }
 
             if((command=="s")||(command == "stop")){

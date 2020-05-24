@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "uci.hpp"
+#include "main.hpp"
 
 UciOption UciOption::set_callback(SetOptionCallback* _callback){
     callback = _callback;
@@ -117,6 +118,11 @@ Uci Uci::set_position_command_callback(PositionCommandCallback* _callback){
 	return *this;
 }
 
+Uci Uci::set_go_command_callback(GoCommandCallback* _callback){
+	go_command_callback = _callback;
+	return *this;
+}
+
 bool Uci::execute_uci_command(std::string command){
 	std::string alias = command_aliases[command];
 
@@ -173,6 +179,40 @@ bool Uci::execute_uci_command(std::string command){
         if(moves == "") moves = t.get_up_to("");                
         position_command_callback(fen, moves);
         return true;
+    }
+
+    if((tcommand == "go")||(tcommand == "g")){
+    	if(!go_command_callback){
+    		return false;
+    	}
+
+    	GoParams go_params = GoParams{
+    		0,
+    		0,
+    	};
+
+    	while(true){
+    		std::string token = t.get_token();
+    		if(token == "") break;
+    		if(token == "depth"){
+    			ToIntResult ti = to_int(t.get_token().c_str());
+				if(ti.ok){
+					go_params.depth = ti.value;
+				}else{
+					std::cout << "invalid search depth" << std::endl;
+				}
+    		}
+    		if(token == "time"){
+    			ToIntResult ti = to_int(t.get_token().c_str());
+				if(ti.ok){
+					go_params.time = ti.value;
+				}else{
+					std::cout << "invalid search time" << std::endl;
+				}
+    		}
+    	}
+
+    	go_command_callback(go_params);
     }
 
     if(tcommand == "uci"){

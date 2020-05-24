@@ -9,6 +9,11 @@
 
 #include "main.hpp"
 
+struct GoParams{
+    int depth;
+    int time;
+};
+
 class UciOption;
 
 typedef void SetOptionCallback(UciOption);
@@ -44,6 +49,7 @@ public:
 const int MAX_UCI_OPTIONS = 100;
 
 typedef void PositionCommandCallback(std::string specifier, std::string moves);
+typedef void GoCommandCallback(GoParams go_params);
 
 class Uci{
 public:
@@ -53,6 +59,7 @@ public:
     UciOption options[MAX_UCI_OPTIONS];    
     std::map<std::string, std::string> command_aliases;
     PositionCommandCallback* position_command_callback;
+    GoCommandCallback* go_command_callback;
     Uci set_engine_name(std::string _engine_name);
     Uci set_engine_author(std::string _engine_author);
     Uci add_option(UciOption uo);    
@@ -62,11 +69,13 @@ public:
     void set_option(std::string name, std::string value);
     std::string pretty_option_list();
     Uci set_position_command_callback(PositionCommandCallback* _callback);
+    Uci set_go_command_callback(GoCommandCallback* _callback);
     Uci set_command_aliases(std::map<std::string, std::string> _command_aliases);
     bool execute_uci_command(std::string command);
     Uci(){
         num_options = 0;
         position_command_callback = NULL;
+        go_command_callback = NULL;
         command_aliases = {};
     };
 };

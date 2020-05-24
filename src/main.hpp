@@ -40,6 +40,14 @@ inline ToIntResult to_int(char const *s){
      return ToIntResult{true, negate ? result : -result};
 }
 
+inline int get_int_else(char const *s, int default_value){
+	ToIntResult ti = to_int(s);
+	if(ti.ok){
+		return ti.value;
+	}
+	return default_value;
+}
+
 inline int split(std::string str, std::string delim, std::string *buff) {
 	int index = int(str.find(delim));
 	int cnt = 0;

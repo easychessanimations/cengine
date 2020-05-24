@@ -6,6 +6,7 @@
 
 #include "state.hpp"
 #include "attack.hpp"
+#include "uci.hpp"
 
 struct AlphaBetaInfo{
 	Score alpha;
@@ -30,7 +31,7 @@ struct MoveSortEntry{
 	Score attack;
 };
 
-extern void search(LinearGame *lg, Depth depth);
+extern void search(LinearGame *lg, GoParams go_params);
 
 extern void set_pv_entry(State *st, Move move, Depth depth);
 

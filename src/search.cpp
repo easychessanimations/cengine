@@ -11,6 +11,7 @@
 #include "state.hpp"
 #include "attack.hpp"
 #include "search.hpp"
+#include "uci.hpp"
 
 #ifndef WASM
 const int PV_TABLE_KEY_SIZE_IN_BITS = 22;
@@ -21,7 +22,12 @@ const int PV_TABLE_KEY_SIZE_IN_BITS = 22;
 const Magic PV_TABLE_SIZE = (1<<PV_TABLE_KEY_SIZE_IN_BITS);
 const Magic PV_TABLE_MASK = PV_TABLE_SIZE - 1;
 
+std::chrono::steady_clock::time_point begin;
+std::chrono::steady_clock::time_point end;
+
 bool search_stopped;
+
+int search_time;
 
 Move root_move;
 bool has_root_move;
@@ -78,6 +84,16 @@ bool is_ignored_root_move(LinearGame* lg, Move move){
 }
 
 Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
+	if(nodes % 100000 == 99999){
+		end = std::chrono::steady_clock::now();			
+
+		int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() + 1;
+
+		if(ms >= search_time){
+			search_stopped = true;
+		}
+	}
+
 	if(search_stopped) return 0;
 
 	State *curr = &lg->states[lg->state_ptr];
@@ -196,9 +212,6 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 	return alpha;
 }
-
-std::chrono::steady_clock::time_point begin;
-std::chrono::steady_clock::time_point end;
 
 std::string get_pv(LinearGame *lg, Depth max_depth){
 	bool ok = true;
@@ -362,7 +375,7 @@ void sort_multipv(MultipvInfo* mi){
 	qsort(mi->items, mi->num_items, sizeof(MultipvInfoItem), comp_multipv);
 }
 
-void search(LinearGame *lg, Depth depth){
+void search(LinearGame *lg, GoParams go_params){
 	nodes = 0;
 
 	begin = std::chrono::steady_clock::now();	
@@ -386,6 +399,18 @@ void search(LinearGame *lg, Depth depth){
 		std::cout << "info string no legal moves" << std::endl;
 		std::cout << "bestmove (none)" << std::endl;
 		return;
+	}
+
+	Depth depth = (Depth)go_params.depth;
+
+	if((depth<=0)||(depth>(MAX_STATES-1))){
+		depth = (Depth)(MAX_STATES-1);
+	}
+
+	search_time = go_params.time;
+
+	if(search_time<=0){
+		search_time = 24 * 60 * 60 * 1000;
 	}
 
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
