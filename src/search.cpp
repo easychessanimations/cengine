@@ -27,6 +27,8 @@ std::chrono::steady_clock::time_point end;
 
 bool search_stopped;
 
+bool stop_on_mate;
+
 int search_time;
 
 Move root_move;
@@ -71,7 +73,7 @@ void set_pv_entry(State *st, Move move, Depth depth){
 int comp_sort_moves(const void *vm1, const void *vm2){
 	MoveSortEntry m1 = *((MoveSortEntry*)vm1);
 	MoveSortEntry m2 = *((MoveSortEntry*)vm2);
-	if(m1.is_pv != m2.is_pv) return m1.is_pv ? -1 : 1;	
+	if(m1.pv_index != m2.pv_index) return m1.pv_index < m2.pv_index ? -1 : 1;	
 	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;
 	return m1.attack > m2.attack ? -1 : 1;
 }
@@ -108,13 +110,36 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 	Move *last_legal = generate_legal(curr, legal_moves);
 
 	if(last_legal == legal_moves){
-		if(is_in_check(curr)){
-			// mate
-			return -MATE_SCORE + abi.current_depth;
+		//std::cout << "mate" << std::endl;
+		//std::cout << pretty_state(curr);
+		Move test_pseudo_legal[MAX_MOVES];
+		Move* last_pseudo_legal = generate_pseudo_legal(curr, test_pseudo_legal);
+
+		bool found_legal = false;
+
+		for(Move* plptr = test_pseudo_legal;plptr<last_pseudo_legal;plptr++){
+			//std::cout << "testing " << uci_of_move(*plptr) << std::endl;
+			State test_st = *curr;
+			make_move(&test_st, *plptr);
+			bool check = is_in_check_color(&test_st, curr->turn);
+			//std::cout << "check " << is_in_check_color(&test_st, curr->turn) << std::endl;
+			if(!check){
+				found_legal = true;
+				break;
+			}
 		}
 
-		// stalemate
-		return 0;
+		if(!found_legal){
+			//search_stopped = true;
+			//return 0;
+			if(is_in_check(curr)){
+				// mate
+				return -MATE_SCORE + abi.current_depth;
+			}
+
+			// stalemate
+			return 0;
+		}		
 	}
 
 	PvEntry pv_entry = get_pv_entry(curr);
@@ -148,12 +173,12 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		attack += pop_cnt(mob & curr->by_color[1-curr->turn]);		
 
-		bool is_pv = false;
+		bool pv_index = 0;
 
 		if(pv_entry.ok){
-			for(int i = 0; i < MAX_PV_MOVES; i++){
+			for(uint8_t i = 0; i < MAX_PV_MOVES; i++){
 				if(pv_entry.moves[i]==move){
-					is_pv=true;
+					pv_index = i;
 					break;
 				}
 			}
@@ -161,7 +186,7 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		*msptr++ = MoveSortEntry{
 			move,
-			is_pv,
+			pv_index,
 			to_p,
 			attack,
 		};
@@ -298,7 +323,7 @@ void search_inner(LinearGame *lg, Depth depth){
 			last_score = score;
 
 			if((score < -WIN_SCORE) || (score > WIN_SCORE)){
-				mate_found = true;
+				if(stop_on_mate) mate_found = true;
 			}
 
 			end = std::chrono::steady_clock::now();			

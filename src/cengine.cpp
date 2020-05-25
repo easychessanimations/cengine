@@ -24,6 +24,8 @@
 #define __EMSCRIPTEN_PTHREADS__
 #endif
 
+bool interactive_mode;
+
 Uci uci;
 
 LinearGame lg;
@@ -35,16 +37,17 @@ GoParams do_search_go_params;
 int puzzle_ptr;
 
 void *do_search(void *dummy){
-
-    std::cout << "doing search" << std::endl;
-
     search(&lg, do_search_go_params);
 
     return NULL;
 }
 
+void new_line(){
+    if(interactive_mode) std::cout << std::endl;
+}
+
 void print_state(){
-    std::cout << pretty_state(curr);
+    if(interactive_mode) std::cout << pretty_state(curr);
 }
 
 void set_multipv_callback(UciOption uo){
@@ -111,11 +114,15 @@ extern "C" {
 
         lg.states[0] = st;
         lg.state_ptr = 0;
-        lg.multipv = 3;
+        lg.multipv = 1;
 
         curr=&lg.states[lg.state_ptr];
 
         search_stopped = true;
+
+        interactive_mode = false;
+
+        stop_on_mate = false;
 
         uci = Uci()
             .set_engine_name("cengine")
@@ -145,17 +152,15 @@ extern "C" {
                 .set_callback(set_multipv_callback)
             );        
 
-        std::cout << uci.intro() << std::endl;
+        std::cout << uci.intro();
 
-        std::cout << pretty_state(&st) << std::endl;
-
-        std::cout << "info string engine initialized\n" << std::endl;
+        new_line();
     }
 
     void execute_uci_command(char* command_cstr) {
         std::string command = command_cstr;
 
-        if((command != "s")&&(command != "stop")) std::cout << std::endl;
+        if((command != "s")&&(command != "stop")) new_line();
 
         if (command == "x" || command == "exit" || command == "q" || command == "quit") {
             std::cout << command << " command recognized but not supported in this mode" << std::endl;
@@ -190,7 +195,7 @@ extern "C" {
             }
 
             for(Move *ptr = sorted_move_buff; ptr < last_move; ptr++){
-                if(move_to_san(curr, *ptr) == command){
+                if((move_to_san(curr, *ptr) == command)||(uci_of_move(*ptr) == command)){
                     push_state(&lg);
                     curr=&lg.states[lg.state_ptr];
                     make_move(curr, *ptr);
@@ -217,6 +222,8 @@ extern "C" {
             }
 
             if(command == "i"){
+                interactive_mode = true;
+                stop_on_mate = true;
                 print_state();
                 return;
             }
@@ -236,9 +243,11 @@ extern "C" {
                 }
                 if(depth <= 0) depth = 1;
                 if(depth > 6) depth = 7;
-                std::cout << "doing perft " << depth << std::endl << std::endl;
+                
                 perft(&lg, depth);
-                std::cout << std::endl;
+
+                new_line();
+
                 return;
             }
 
@@ -278,13 +287,20 @@ extern "C" {
                 print_state();
             }
 
-            if(puzzle_solution != ""){
-                std::cout << std::endl << puzzle_solution << std::endl << std::endl;
+            if(puzzle_solution != ""){                
+                new_line();
+
+                std::cout << puzzle_solution << std::endl;
+
+                new_line();
             }
 
             if(command == "a"){
                 lg.states[lg.state_ptr].atomic = !lg.states[lg.state_ptr].atomic;
-                std::cout << (lg.states[lg.state_ptr].atomic ? "atomic on" : "atomic off") << std::endl << std::endl;
+
+                std::cout << (lg.states[lg.state_ptr].atomic ? "atomic on" : "atomic off") << std::endl;
+
+                new_line();
             }
         }
     }

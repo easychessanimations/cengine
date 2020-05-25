@@ -216,7 +216,7 @@ bool Uci::execute_uci_command(std::string command){
     }
 
     if(tcommand == "uci"){
-        std::cout << uci() << std::endl;
+        std::cout << uci();
         return true;        
     }
 

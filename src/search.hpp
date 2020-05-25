@@ -26,7 +26,7 @@ struct PvEntry{
 
 struct MoveSortEntry{
 	Move move;
-	bool is_pv;
+	uint8_t pv_index;
 	Score capture;
 	Score attack;
 };
@@ -36,5 +36,7 @@ extern void search(LinearGame *lg, GoParams go_params);
 extern void set_pv_entry(State *st, Move move, Depth depth);
 
 extern bool search_stopped;
+
+extern bool stop_on_mate;
 
 #endif
