@@ -47,6 +47,8 @@ bool has_finished_root_move;
 Move finished_ponder_move;
 bool has_finished_ponder_move;
 
+Move killer_move_table[MAX_STATES][MAX_KILLER_MOVES];
+
 PvEntry pv_table[PV_TABLE_SIZE];
 
 PvEntry get_pv_entry(State *st){
@@ -118,6 +120,7 @@ int comp_sort_moves(const void *vm1, const void *vm2){
 	MoveSortEntry m2 = *((MoveSortEntry*)vm2);	
 	if(m1.pv_index != m2.pv_index) return m1.pv_index < m2.pv_index ? -1 : 1;		
 	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;		
+	if(m1.is_killer != m2.is_killer) return m1.is_killer ? -1 : 1;
 	if(m1.attack != m2.attack) return m1.attack > m2.attack ? -1 : 1;		
 	if(m1.tree_size != m2.tree_size) return m1.tree_size > m2.tree_size ? -1 : 1;
 	return 0;
@@ -199,58 +202,88 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 	Square king_sq_them = pop_square(&king_bb_them);	
 	Bitboard king_attack_them = KING_ATTACK[king_sq_them];
 
-	for(ptr = legal_moves; ptr < last_legal; ptr++){
-		Move move = *ptr;
+	MoveSortEntry *last_sorted_legal;
 
-		Square from_sq = from_sq_of(move);
-		Square to_sq = to_sq_of(move);
+	bool do_sorting = abi.max_depth - abi.current_depth > 0;
 
-		Piece from_p = piece_at_square(curr, from_sq);
-		Piece to_p = piece_at_square(curr, to_sq);
-		
-		Bitboard mob = mobility_for_piece_at_square(curr, from_p, to_sq, true, true);
+	if(do_sorting){
+		for(ptr = legal_moves; ptr < last_legal; ptr++){
+			Move move = *ptr;
 
-		Score attack = pop_cnt(king_attack_them & mob);
+			Square from_sq = from_sq_of(move);
+			Square to_sq = to_sq_of(move);
 
-		if(bitboard_of(king_sq_them) & mob) attack+= 3;
+			Piece from_p = piece_at_square(curr, from_sq);
+			Piece to_p = piece_at_square(curr, to_sq);
+			
+			Bitboard mob = mobility_for_piece_at_square(curr, from_p, to_sq, true, true);
 
-		attack *= 3;
+			Score attack = pop_cnt(king_attack_them & mob);
 
-		attack += 2 * pop_cnt(mob & curr->by_color[1-curr->turn] & (curr->by_figure[QUEEN]||curr->by_figure[ROOK]));
+			if(bitboard_of(king_sq_them) & mob) attack+= 3;
 
-		attack += pop_cnt(mob & curr->by_color[1-curr->turn]);		
+			attack *= 3;
 
-		bool pv_index = 0;
+			attack += 2 * pop_cnt(mob & curr->by_color[1-curr->turn] & (curr->by_figure[QUEEN]||curr->by_figure[ROOK]));
 
-		if(pv_entry.ok){
-			for(uint8_t i = 0; i < MAX_PV_MOVES; i++){
-				if(pv_entry.moves[i]==move){
-					pv_index = i;
+			attack += pop_cnt(mob & curr->by_color[1-curr->turn]);		
+
+			bool pv_index = 0;
+
+			if(pv_entry.ok){
+				for(uint8_t i = 0; i < MAX_PV_MOVES; i++){
+					if(pv_entry.moves[i]==move){
+						pv_index = i;
+						break;
+					}
+				}
+			}
+
+			PosMoveEntry pme = get_pos_move_entry(curr, move);
+
+			long long tree_size = 0;
+
+			if(pme.ok){
+				tree_size = pme.tree_size;
+			}
+
+			Score capture = to_p != NO_PIECE ? 1 : 0;
+
+			if(capture){
+				if(to_p > from_p) capture += to_p - from_p;
+			}
+
+			bool is_killer = false;
+
+			for(int i=0;i<MAX_KILLER_MOVES;i++){
+				if((killer_move_table[abi.current_depth][i] == move)||(killer_move_table[abi.current_depth-2][i] == move)){
+					is_killer = true;
 					break;
 				}
 			}
+
+			*msptr++ = MoveSortEntry{
+				move,
+				pv_index,
+				capture,
+				is_killer,
+				attack,
+				tree_size,
+			};
 		}
 
-		PosMoveEntry pme = get_pos_move_entry(curr, move);
+		last_sorted_legal = msptr;
 
-		long long tree_size = 0;
-
-		if(pme.ok){
-			tree_size = pme.tree_size;
+		qsort(sort_legal_moves, last_sorted_legal - sort_legal_moves, sizeof(MoveSortEntry), comp_sort_moves);
+	}else{
+		for(ptr = legal_moves; ptr < last_legal; ptr++){
+			*msptr++ = MoveSortEntry{
+				*ptr,
+			};
 		}
 
-		*msptr++ = MoveSortEntry{
-			move,
-			pv_index,
-			to_p,
-			attack,
-			tree_size,
-		};
+		last_sorted_legal = msptr;
 	}
-
-	MoveSortEntry *last_sorted_legal = msptr;
-
-	qsort(sort_legal_moves, last_sorted_legal - sort_legal_moves, sizeof(MoveSortEntry), comp_sort_moves);
 
 	Score alpha = abi.alpha;
 
@@ -277,7 +310,7 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		if(do_null_move){
 			max_depth -= 1;
-		}else if((abi.current_depth>0)&&((msptr-sort_legal_moves)>8)){
+		}else if((abi.current_depth>0)&&((msptr-sort_legal_moves)>11)){
 			max_depth -= 1;
 		}
 
@@ -306,6 +339,13 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 				if(abi.current_depth == 0){
 					root_move = move;
 					has_root_move = true;
+				}
+				if(piece_at_square(curr, to_sq_of(move)) == NO_PIECE){
+					// quiet move
+					for(int i=MAX_KILLER_MOVES-1;i>0;i--){
+						killer_move_table[abi.current_depth][i] = killer_move_table[abi.current_depth][i-1];
+						killer_move_table[abi.current_depth][0] = move;
+					}
 				}
 			}			
 		}
