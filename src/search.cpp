@@ -169,7 +169,9 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		if(bitboard_of(king_sq_them) & mob) attack+= 3;
 
-		attack += pop_cnt(mob & curr->by_color[1-curr->turn] & (curr->by_figure[QUEEN]||curr->by_figure[ROOK]));
+		attack *= 3;
+
+		attack += 2 * pop_cnt(mob & curr->by_color[1-curr->turn] & (curr->by_figure[QUEEN]||curr->by_figure[ROOK]));
 
 		attack += pop_cnt(mob & curr->by_color[1-curr->turn]);		
 
@@ -322,7 +324,7 @@ void search_inner(LinearGame *lg, Depth depth){
 
 			last_score = score;
 
-			if((score < -WIN_SCORE) || (score > WIN_SCORE)){
+			if(score > WIN_SCORE){
 				if(stop_on_mate) mate_found = true;
 			}
 

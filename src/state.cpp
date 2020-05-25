@@ -700,7 +700,12 @@ Score eval_state(State *st){
 		Score dir = 2 * col - 1;
 
 		Bitboard pawns = st->by_figure[PAWN] & st->by_color[col];
-		mat += dir * 100 * pop_cnt(pawns);
+
+		Score pawn_value = 100;
+
+		if(st->atomic) pawn_value = 225;
+
+		mat += dir * pawn_value * pop_cnt(pawns);
 
 		mat += dir * 25 * pop_cnt(pawns & CENTER_BB);
 
