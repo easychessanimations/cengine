@@ -408,8 +408,8 @@ void search_inner(LinearGame *lg, Depth depth){
 			Score window_high = INFINITE_SCORE;
 
 			if(iter_depth > 4){
-				window_low = 50;
-				window_high = 50;
+				window_low = 20;
+				window_high = 20;
 			}
 
 			bool succ = false;		

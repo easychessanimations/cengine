@@ -107,7 +107,7 @@ const Score INFINITE_SCORE = 20000;
 const Score MATE_SCORE = 10000;
 const Score WIN_SCORE = 9000;
 
-const Score RANDOM_BONUS = 15;
+const Score RANDOM_BONUS = 5;
 
 extern Score eval_state(State *st);
 
@@ -122,5 +122,7 @@ extern Piece piece_at_square(State *st, Square sq);
 extern Bitboard mobility_for_piece_at_square(State *st, Piece p, Square sq, bool violent, bool quiet);
 
 extern void make_uci_move(LinearGame* lg, std::string move_uci);
+
+extern Score phase(State *st);
 
 #endif

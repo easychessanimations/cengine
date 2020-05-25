@@ -325,8 +325,10 @@ std::string pretty_state(State *st) {
 	}
 	buff += "  " + vspec + " , fen : " + report_fen(st);
 	BSPRINTF(ebuff, " , score : %d", (int)eval_state(st));
+	BSPRINTF(phbuff, " , phase : %d", (int)phase(st));
 	buff += " ";
 	buff += ebuff;
+	buff += phbuff;
 	buff += "\n";
 
 	Move *last_move = sorted_moves(st);
@@ -697,6 +699,24 @@ Move* generate_legal(State *st, Move* move_buff){
 	return lptr;
 }
 
+Score phase(State *st){
+	return (
+		pop_cnt(st->by_figure[PAWN])+
+		pop_cnt(st->by_figure[KNIGHT])*3+
+		pop_cnt(st->by_figure[BISHOP])*3+
+		pop_cnt(st->by_figure[ROOK])*5+
+		pop_cnt(st->by_figure[QUEEN])*9
+		) * 100 / 78;
+}
+
+Score scale_by_opening(State *st, Score s){
+	return (s * phase(st)) / 100;
+}
+
+Score scale_by_endgame(State *st, Score s){
+	return (100 - s * phase(st)) / 100;
+}
+
 Score eval_state(State *st){
 	Score mat = 0;
 
@@ -711,10 +731,20 @@ Score eval_state(State *st){
 
 		mat += dir * pawn_value * pop_cnt(pawns);
 
-		mat += dir * 25 * pop_cnt(pawns & CENTER_BB);
+		Bitboard semi_center = col ?
+			(bitboard_of(SQUARE_C3)|bitboard_of(SQUARE_D3)|bitboard_of(SQUARE_E3))
+		:
+			(bitboard_of(SQUARE_C6)|bitboard_of(SQUARE_D6)|bitboard_of(SQUARE_E6));
+				
+		mat += scale_by_opening(st, dir * 35 * pop_cnt(pawns & CENTER_BB));
+
+		mat += scale_by_opening(st, dir * 20 * pop_cnt(pawns & semi_center));
 
 		Bitboard knights = st->by_figure[KNIGHT] & st->by_color[col];
 		mat += dir * 300 * pop_cnt(knights);		
+
+		mat -= dir * 75 * pop_cnt(knights & EDGE_BB);
+		mat -= dir * 35 * pop_cnt(knights & SEMI_EDGE_BB);
 
 		Bitboard bishops = st->by_figure[BISHOP] & st->by_color[col];
 		mat += dir * 300 * pop_cnt(bishops);

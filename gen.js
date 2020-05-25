@@ -157,8 +157,12 @@ const Bitboard EMPTY_BB         = 0x0000000000000000;
 const Bitboard UPPER_HALF_BB    = 0xffffffff00000000;
 const Bitboard LOWER_HALF_BB    = 0x00000000ffffffff;
 const Bitboard RANK_1_BB        = 0x00000000000000ff;
+const Bitboard RANK_2_BB        = 0x000000000000ff00;
+const Bitboard RANK_7_BB        = 0x00ff000000000000;
 const Bitboard RANK_8_BB        = 0xff00000000000000;
 const Bitboard FILE_A_BB        = 0x0101010101010101;
+const Bitboard FILE_B_BB        = 0x0202020202020202;
+const Bitboard FILE_G_BB        = 0x4040404040404040;
 const Bitboard FILE_H_BB        = 0x8080808080808080;
 const Bitboard RANK_1_MIDDLE_BB = 0x000000000000007E;
 const Bitboard RANK_8_MIDDLE_BB = 0x7E00000000000000;
@@ -166,6 +170,8 @@ const Bitboard FILE_A_MIDDLE_BB = 0x0001010101010100;
 const Bitboard FILE_H_MIDDLE_BB = 0x0080808080808000;
 const Bitboard MIDDLE_BB        = (~FILE_A_BB) & (~FILE_H_BB) & (~RANK_1_BB) & (~RANK_8_BB);
 const Bitboard CENTER_BB        = 0x0000001818000000;
+const Bitboard EDGE_BB          = RANK_1_BB | RANK_8_BB | FILE_A_BB | FILE_H_BB;
+const Bitboard SEMI_EDGE_BB     = ( RANK_2_BB | RANK_7_BB | FILE_B_BB | FILE_G_BB ) & (~EDGE_BB);
 
 extern std::string pretty_bitboard(Bitboard bb);
 
