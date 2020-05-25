@@ -484,6 +484,10 @@ void set_turn(State *st, Color col){
 }
 
 void make_move(State* st, Move move) {	
+	if(move == 0){
+		set_turn(st, 1 - st->turn);
+		return;
+	}
 	Square from_sq = from_sq_of(move);	
 	Rank from_rank = rank_of(from_sq);
 	File from_file = file_of(from_sq);

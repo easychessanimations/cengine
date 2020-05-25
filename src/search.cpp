@@ -202,10 +202,17 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 	msptr = sort_legal_moves;
 
-	while(msptr < last_sorted_legal){
-		MoveSortEntry move_sort_entry = *msptr++;
+	bool do_null_move = (abi.current_depth > 0) && (!abi.null_move_done);
 
-		Move move = move_sort_entry.move;
+	Move move;
+
+	while(msptr < last_sorted_legal){
+		if(do_null_move){
+			move = 0;
+		}else{
+			move = msptr->move;
+			msptr++;
+		}
 
 		if(is_ignored_root_move(lg, move)) continue;
 
@@ -214,22 +221,33 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 		Depth max_depth = abi.max_depth;
 
+		if(do_null_move){
+			max_depth -= 1;
+		}else if((abi.current_depth>0)&&((msptr-sort_legal_moves)>8)){
+			max_depth -= 1;
+		}
+
 		Score score = -alpha_beta_rec(lg, AlphaBetaInfo{
 			(Score)(-abi.beta),
 			(Score)(-alpha),
 			(Depth)(abi.current_depth + 1),
 			(Depth)(max_depth),
+			abi.null_move_done || do_null_move,
 		});
+
+		do_null_move = false;
 
 		pop_state(lg);
 
 		if(score > alpha){
 			alpha = score;
-			set_pv_entry(curr, move, abi.current_depth);						
-			if(abi.current_depth == 0){
-				root_move = move;
-				has_root_move = true;
-			}
+			if(move != 0){
+				set_pv_entry(curr, move, abi.current_depth);						
+				if(abi.current_depth == 0){
+					root_move = move;
+					has_root_move = true;
+				}
+			}			
 		}
 
 		if(score >= abi.beta){
@@ -306,7 +324,8 @@ void search_inner(LinearGame *lg, Depth depth){
 					alpha,
 					beta,
 					0,
-					iter_depth
+					iter_depth,
+					false,
 				});		
 
 				if(search_stopped){

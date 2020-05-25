@@ -13,9 +13,10 @@ struct AlphaBetaInfo{
 	Score beta;
 	Depth current_depth;
 	Depth max_depth;
+	bool null_move_done;
 };
 
-const int MAX_PV_MOVES = 4;
+const int MAX_PV_MOVES = 8;
 
 struct PvEntry{
 	Depth depth;
