@@ -257,6 +257,16 @@ void init_keys(){
 	}
 }
 
+Magic MOVE_FROM_TO_KEYS[BOARD_AREA][BOARD_AREA];
+
+void init_move_from_to_keys(){
+	for(Square sq_from = 0; sq_from < BOARD_AREA; sq_from++){
+		for(Square sq_to = 0; sq_to < BOARD_AREA; sq_to++){
+			MOVE_FROM_TO_KEYS[sq_from][sq_to] = gen_magic();
+		}	
+	}
+}
+
 bool init_attacks() {
 	srand((unsigned int)1234323);
 #ifdef WASM
@@ -292,6 +302,7 @@ bool init_attacks() {
 	init_pawn_infos();
 	if(VERBOSE) std::cout << "info string initializing pawn infos done" << std::endl;
 	init_keys();
+	init_move_from_to_keys();
 	srand((unsigned int)time(NULL));
 	return true;
 }

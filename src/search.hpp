@@ -16,7 +16,7 @@ struct AlphaBetaInfo{
 	bool null_move_done;
 };
 
-const int MAX_PV_MOVES = 8;
+const int MAX_PV_MOVES = 3;
 
 struct PvEntry{
 	Depth depth;
@@ -25,11 +25,20 @@ struct PvEntry{
 	bool ok;
 };
 
+struct PosMoveEntry{
+	Magic key;
+	Move move;
+	Depth depth;
+	long long tree_size;	
+	bool ok;
+};
+
 struct MoveSortEntry{
 	Move move;
 	uint8_t pv_index;
 	Score capture;
 	Score attack;
+	long long tree_size;
 };
 
 extern void search(LinearGame *lg, GoParams go_params);

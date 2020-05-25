@@ -141,4 +141,6 @@ extern Magic TURN_KEYS[2];
 
 extern Magic gen_magic();
 
+extern Magic MOVE_FROM_TO_KEYS[BOARD_AREA][BOARD_AREA];
+
 #endif

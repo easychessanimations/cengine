@@ -22,6 +22,15 @@ const int PV_TABLE_KEY_SIZE_IN_BITS = 22;
 const Magic PV_TABLE_SIZE = (1<<PV_TABLE_KEY_SIZE_IN_BITS);
 const Magic PV_TABLE_MASK = PV_TABLE_SIZE - 1;
 
+#ifndef WASM
+const int POS_MOVE_TABLE_KEY_SIZE_IN_BITS = 22;
+#else
+const int POS_MOVE_TABLE_KEY_SIZE_IN_BITS = 22;
+#endif
+
+const Magic POS_MOVE_TABLE_SIZE = (1<<POS_MOVE_TABLE_KEY_SIZE_IN_BITS);
+const Magic POS_MOVE_TABLE_MASK = POS_MOVE_TABLE_SIZE - 1;
+
 std::chrono::steady_clock::time_point begin;
 std::chrono::steady_clock::time_point end;
 
@@ -70,12 +79,48 @@ void set_pv_entry(State *st, Move move, Depth depth){
 	pv_table[key] = new_pv_entry;
 }
 
+PosMoveEntry pos_move_table[POS_MOVE_TABLE_SIZE];
+
+inline Magic pos_move_key(State *st, Move move){
+	return ( st->hash_key ^ MOVE_FROM_TO_KEYS[from_sq_of(move)][to_sq_of(move)] ) & POS_MOVE_TABLE_MASK;
+}
+
+PosMoveEntry get_pos_move_entry(State *st, Move move){
+	Magic key = pos_move_key(st, move);
+	PosMoveEntry entry = pos_move_table[key];
+	if((entry.key == st->hash_key)&&(entry.move == move)){
+		entry.ok = true;
+		return entry;
+	}
+	entry.ok = false;
+	return entry;
+}
+
+void set_pos_move_entry(State *st, Move move, Depth depth, long long tree_size){	
+	PosMoveEntry old_entry = get_pos_move_entry(st, move);
+	if(old_entry.ok){
+		if(old_entry.depth < depth){
+			return;
+		}
+	}
+	Magic key = pos_move_key(st, move);	
+	PosMoveEntry new_pos_move_entry = old_entry;
+	new_pos_move_entry.depth = depth;
+	new_pos_move_entry.key = st->hash_key;
+	new_pos_move_entry.move = move;
+	new_pos_move_entry.ok = true;	
+	new_pos_move_entry.tree_size = tree_size;
+	pos_move_table[key] = new_pos_move_entry;
+}
+
 int comp_sort_moves(const void *vm1, const void *vm2){
 	MoveSortEntry m1 = *((MoveSortEntry*)vm1);
-	MoveSortEntry m2 = *((MoveSortEntry*)vm2);
-	if(m1.pv_index != m2.pv_index) return m1.pv_index < m2.pv_index ? -1 : 1;	
-	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;
-	return m1.attack > m2.attack ? -1 : 1;
+	MoveSortEntry m2 = *((MoveSortEntry*)vm2);	
+	if(m1.pv_index != m2.pv_index) return m1.pv_index < m2.pv_index ? -1 : 1;		
+	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;		
+	if(m1.attack != m2.attack) return m1.attack > m2.attack ? -1 : 1;		
+	if(m1.tree_size != m2.tree_size) return m1.tree_size > m2.tree_size ? -1 : 1;
+	return 0;
 }
 
 bool is_ignored_root_move(LinearGame* lg, Move move){
@@ -186,11 +231,20 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 			}
 		}
 
+		PosMoveEntry pme = get_pos_move_entry(curr, move);
+
+		long long tree_size = 0;
+
+		if(pme.ok){
+			tree_size = pme.tree_size;
+		}
+
 		*msptr++ = MoveSortEntry{
 			move,
 			pv_index,
 			to_p,
 			attack,
+			tree_size,
 		};
 	}
 
@@ -227,6 +281,8 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 			max_depth -= 1;
 		}
 
+		long long nodes_start = nodes;
+
 		Score score = -alpha_beta_rec(lg, AlphaBetaInfo{
 			(Score)(-abi.beta),
 			(Score)(-alpha),
@@ -234,6 +290,10 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 			(Depth)(max_depth),
 			abi.null_move_done || do_null_move,
 		});
+
+		long long tree_size = nodes - nodes_start;
+
+		set_pos_move_entry(curr, move, abi.current_depth, tree_size);
 
 		do_null_move = false;
 
