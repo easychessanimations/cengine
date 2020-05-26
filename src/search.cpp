@@ -566,9 +566,9 @@ void search(LinearGame *lg, GoParams go_params){
 		cut_from = 17-iter_depth;
 		if(cut_from<2) cut_from = 2;
 		cut_what = 1;
-		if(iter_depth<6) cut_what = 0;
-		if(iter_depth>10) cut_what=2;
-		if(iter_depth>16) cut_what=3;
+		if(iter_depth<9) cut_what = 0;
+		if(iter_depth>12) cut_what=2;
+		if(iter_depth>15) cut_what=3;
 
 		if(iter_depth <= DOUBLE_ITERATION_LIMIT){
 			search_inner(lg, iter_depth);
