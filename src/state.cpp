@@ -743,8 +743,10 @@ Score eval_state(State *st){
 		Bitboard knights = st->by_figure[KNIGHT] & st->by_color[col];
 		mat += dir * 300 * pop_cnt(knights);		
 
-		mat -= dir * 75 * pop_cnt(knights & EDGE_BB);
-		mat -= dir * 35 * pop_cnt(knights & SEMI_EDGE_BB);
+		if(!st->atomic){
+			mat -= dir * 75 * pop_cnt(knights & EDGE_BB);
+			mat -= dir * 35 * pop_cnt(knights & SEMI_EDGE_BB);
+		}		
 
 		Bitboard bishops = st->by_figure[BISHOP] & st->by_color[col];
 		mat += dir * 300 * pop_cnt(bishops);
@@ -757,8 +759,11 @@ Score eval_state(State *st){
 
 		if(st->atomic){
 			Bitboard opp_bases = col ? BLACK_BASES_BB : WHITE_BASES_BB;
+			Bitboard own_bases = col ? WHITE_BASES_BB : BLACK_BASES_BB;
 
-			mat += dir * 200 * pop_cnt( (knights|bishops|rooks|queens) & opp_bases );
+			mat += dir * scale_by_opening(st, 200 * pop_cnt( (knights|bishops|rooks|queens) & opp_bases ) );
+
+			mat -= dir * scale_by_opening(st, 150 * pop_cnt( knights & own_bases ) );
 
 			Bitboard opp_knight_attack_rank = col ? RANK_5_BB : RANK_4_BB;
 
