@@ -31,6 +31,9 @@ const int POS_MOVE_TABLE_KEY_SIZE_IN_BITS = 22;
 const Magic POS_MOVE_TABLE_SIZE = (1<<POS_MOVE_TABLE_KEY_SIZE_IN_BITS);
 const Magic POS_MOVE_TABLE_MASK = POS_MOVE_TABLE_SIZE - 1;
 
+Depth cut_from;
+Depth cut_what;
+
 std::chrono::steady_clock::time_point begin;
 std::chrono::steady_clock::time_point end;
 
@@ -309,9 +312,9 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 		Depth max_depth = abi.max_depth;
 
 		if(do_null_move){
-			max_depth -= 1;
-		}else if((abi.current_depth>0)&&((msptr-sort_legal_moves)>11)){
-			max_depth -= 1;
+			max_depth -= cut_what;
+		}else if((abi.current_depth>0)&&((msptr-sort_legal_moves)>cut_from)){
+			max_depth -= cut_what;
 		}
 
 		long long nodes_start = nodes;
@@ -560,6 +563,10 @@ void search(LinearGame *lg, GoParams go_params){
 	}
 
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
+		cut_from = 15-iter_depth;
+		if(cut_from<1) cut_from = 3;
+		cut_what = 1;
+
 		if(iter_depth <= DOUBLE_ITERATION_LIMIT){
 			search_inner(lg, iter_depth);
 		}else{
