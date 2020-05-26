@@ -758,11 +758,11 @@ Score eval_state(State *st){
 		if(st->atomic){
 			Bitboard opp_bases = col ? BLACK_BASES_BB : WHITE_BASES_BB;
 
-			mat += 200 * pop_cnt( (knights|bishops|rooks|queens) & opp_bases );
+			mat += dir * 200 * pop_cnt( (knights|bishops|rooks|queens) & opp_bases );
 
 			Bitboard opp_knight_attack_rank = col ? RANK_5_BB : RANK_4_BB;
 
-			mat += scale_by_opening(st, 150 * pop_cnt( knights & opp_knight_attack_rank ) );
+			mat += dir * scale_by_opening(st, 150 * pop_cnt( knights & opp_knight_attack_rank ) );
 		}
 	}
 
