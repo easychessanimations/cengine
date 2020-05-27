@@ -16,8 +16,8 @@ struct AlphaBetaInfo{
 	bool null_move_done;
 };
 
-const int MAX_PV_MOVES = 4;
-const int MAX_KILLER_MOVES = 16;
+const int MAX_PV_MOVES = 9;
+const int MAX_KILLER_MOVES = 3;
 
 struct PvEntry{
 	Depth depth;
