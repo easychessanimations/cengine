@@ -259,7 +259,15 @@ extern "C" {
 
             std::string set_fen = "";
 
-            if(command == "u"){
+            bool start_analysis = false;
+
+            if((command == "u")||(command == "")){
+                if(command == ""){
+                    interactive_mode = true;
+                    stop_on_mate = true;
+                    start_analysis = true;
+                }
+
                 puzzle_ptr += ( gen_magic() & 0x3f ) + 3;
                 if(puzzle_ptr > 460) puzzle_ptr = 0;
 
@@ -283,8 +291,8 @@ extern "C" {
                         }
                     }
                 }                
-                lg.states[0] = state_from_fen(fen);
-                print_state();
+                lg.states[0] = state_from_fen(fen);                
+                print_state();                
             }
 
             if(puzzle_solution != ""){                
@@ -293,6 +301,10 @@ extern "C" {
                 std::cout << puzzle_solution << std::endl;
 
                 new_line();
+            }
+
+            if(start_analysis){
+                go_command_callback(GoParams{0,0});
             }
 
             if(command == "a"){
