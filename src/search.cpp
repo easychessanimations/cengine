@@ -125,6 +125,7 @@ int comp_sort_moves(const void *vm1, const void *vm2){
 	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;		
 	if(m1.is_killer != m2.is_killer) return m1.is_killer ? -1 : 1;	
 	if(m1.attack != m2.attack) return m1.attack > m2.attack ? -1 : 1;				
+	if(m1.moved_figure != m2.moved_figure) return m1.moved_figure > m2.moved_figure ? -1 : 1;				
 	if(m1.tree_size != m2.tree_size) return m1.tree_size > m2.tree_size ? -1 : 1;
 	return 0;
 }
@@ -277,6 +278,7 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 				capture,
 				is_killer,
 				attack,
+				figure_of(from_p),
 				tree_size,
 			};
 		}

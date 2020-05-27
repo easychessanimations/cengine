@@ -40,6 +40,7 @@ struct MoveSortEntry{
 	Score capture;
 	bool is_killer;
 	Score attack;
+	Figure moved_figure;
 	long long tree_size;
 };
 
