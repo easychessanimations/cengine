@@ -16,8 +16,8 @@ struct AlphaBetaInfo{
 	bool null_move_done;
 };
 
-const int MAX_PV_MOVES = 5;
-const int MAX_KILLER_MOVES = 10;
+const int MAX_PV_MOVES = 4;
+const int MAX_KILLER_MOVES = 16;
 
 struct PvEntry{
 	Depth depth;
@@ -38,7 +38,7 @@ struct MoveSortEntry{
 	Move move;
 	uint8_t pv_index;
 	Score capture;
-	bool is_killer;
+	uint8_t killer_index;
 	Score attack;
 	Figure moved_figure;
 	long long tree_size;

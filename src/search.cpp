@@ -121,10 +121,10 @@ void set_pos_move_entry(State *st, Move move, Depth depth, long long tree_size){
 int comp_sort_moves(const void *vm1, const void *vm2){
 	MoveSortEntry m1 = *((MoveSortEntry*)vm1);
 	MoveSortEntry m2 = *((MoveSortEntry*)vm2);	
-	if(m1.pv_index != m2.pv_index) return m1.pv_index < m2.pv_index ? -1 : 1;					
+	if(m1.pv_index != m2.pv_index) return m1.pv_index < m2.pv_index ? -1 : 1;						
 	if(m1.capture != m2.capture) return m1.capture > m2.capture ? -1 : 1;		
-	if(m1.is_killer != m2.is_killer) return m1.is_killer ? -1 : 1;	
-	if(m1.attack != m2.attack) return m1.attack > m2.attack ? -1 : 1;				
+	if(m1.killer_index != m2.killer_index) return m1.killer_index < m2.killer_index ? -1 : 1;		
+	if(m1.attack != m2.attack) return m1.attack > m2.attack ? -1 : 1;					
 	if(m1.moved_figure != m2.moved_figure) return m1.moved_figure > m2.moved_figure ? -1 : 1;				
 	if(m1.tree_size != m2.tree_size) return m1.tree_size > m2.tree_size ? -1 : 1;
 	return 0;
@@ -263,11 +263,11 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 				if(to_p > from_p) capture += to_p - from_p;
 			}
 
-			bool is_killer = false;
+			uint8_t killer_index = MAX_KILLER_MOVES+1;
 
 			for(int i=0;i<MAX_KILLER_MOVES;i++){
 				if((killer_move_table[abi.current_depth][i] == move)||(killer_move_table[abi.current_depth-2][i] == move)){
-					is_killer = true;
+					killer_index = i;
 					break;
 				}
 			}
@@ -276,7 +276,7 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 				move,
 				pv_index,
 				capture,
-				is_killer,
+				killer_index,
 				attack,
 				figure_of(from_p),
 				tree_size,
@@ -355,17 +355,17 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 				}
 				if((piece_at_square(curr, to_sq_of(move)) == NO_PIECE)&&(score >= abi.beta)){
 					// quiet move
-					bool found = false;
+					int found_index = MAX_KILLER_MOVES-1;
 					for(int i=0;i<MAX_KILLER_MOVES;i++){
 						if(killer_move_table[abi.current_depth][i]==move){
-							found = true;
+							found_index = i;							
 							break;
 						}
 					}
-					if(!found) for(int i=MAX_KILLER_MOVES-1;i>0;i--){
-						killer_move_table[abi.current_depth][i] = killer_move_table[abi.current_depth][i-1];
-						killer_move_table[abi.current_depth][0] = move;
-					}
+					for(int i=found_index;i>0;i--){
+						killer_move_table[abi.current_depth][i] = killer_move_table[abi.current_depth][i-1];						
+					}										
+					killer_move_table[abi.current_depth][0] = move;										
 				}
 			}			
 		}
