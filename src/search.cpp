@@ -33,6 +33,7 @@ const Magic POS_MOVE_TABLE_MASK = POS_MOVE_TABLE_SIZE - 1;
 
 Depth cut_from;
 Depth cut_what;
+bool disallow_nullmove;
 
 std::chrono::steady_clock::time_point begin;
 std::chrono::steady_clock::time_point end;
@@ -300,7 +301,7 @@ Score alpha_beta_rec(LinearGame *lg, AlphaBetaInfo abi){
 
 	msptr = sort_legal_moves;
 
-	bool do_null_move = (abi.current_depth > 0) && (!abi.null_move_done);
+	bool do_null_move = (abi.current_depth > 0) && (!abi.null_move_done) && (!disallow_nullmove);
 
 	Move move;
 
@@ -587,10 +588,16 @@ void search(LinearGame *lg, GoParams go_params){
 	}
 
 	for(Depth iter_depth = 1; iter_depth <= depth; iter_depth++){
+		disallow_nullmove = false;
 		cut_from = 17-iter_depth;
 		if(cut_from<1) cut_from = 1;
 		cut_what = 1;
-		if(iter_depth<12) cut_what = 0;
+		if(iter_depth<7){
+			cut_what = 0;			
+		}
+		if(iter_depth<9){
+			disallow_nullmove = true;
+		}
 
 		if(iter_depth <= DOUBLE_ITERATION_LIMIT){
 			search_inner(lg, iter_depth);
