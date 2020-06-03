@@ -1,0 +1,1 @@
+wat2wasm simple.wat -o simple.wasm
