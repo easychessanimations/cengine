@@ -13,6 +13,7 @@ x64/
 !/srcweb/preamble.js
 !/gen.js
 !/build.js
+!/run.js
 !/srcweb/favicon.ico
 
 #cengine.vcxproj
