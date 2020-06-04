@@ -17,20 +17,27 @@ function memToString(offset){
 	return buff
 }
 
+function stringToMem(str, offset){
+	for(let i=0;i<str.length;i++){
+		i32[offset+i]=str.charCodeAt(i)
+	}
+}
+
 WebAssembly.instantiate(new Uint8Array(buf), importObject).then(res => {
 	const moduleExports = res.instance.exports
 
-	const addTwo = moduleExports.addTwo
+	const toUpper = moduleExports.toUpper
+	const toLower = moduleExports.toLower
 
-	i32[0] = 123
+	stringToMem("123abcDEF", 0)
 
-	console.log("addTwo(0,1) = ", addTwo(0,1))
+	toUpper()
 
-	i32[1] = 456
+	console.log(memToString(0))
 
-	console.log("addTwo(1,1) = ", addTwo(1,1))
+	stringToMem("123abcDEF", 0)
 
-	for(let i=0;i<2;i++) console.log(i, i32[i])
+	toLower()
 
 	console.log(memToString(0))
 })
