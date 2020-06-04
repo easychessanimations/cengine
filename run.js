@@ -31,13 +31,13 @@ WebAssembly.instantiate(new Uint8Array(buf), importObject).then(res => {
 
 	stringToMem("123abcDEF", 0)
 
-	toUpper()
+	toUpper(4)
 
 	console.log(memToString(0))
 
-	stringToMem("123abcDEF", 0)
+	stringToMem("123ABCdef", 0)
 
-	toLower()
+	toLower(4)
 
 	console.log(memToString(0))
 })

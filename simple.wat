@@ -38,6 +38,8 @@
 	)
 	(func (export "toUpper") (param $offset i32) (local i32)
 		get_local $offset
+		i32.const 4
+		i32.mul ;; multiply offset by size of i32
 		i32.const 97
 		i32.const 122
 		i32.const -32
@@ -45,6 +47,8 @@
 	)
 	(func (export "toLower") (param $offset i32) (local i32)
 		get_local $offset
+		i32.const 4
+		i32.mul ;; multiply offset by size of i32
 		i32.const 65
 		i32.const 90
 		i32.const 32
